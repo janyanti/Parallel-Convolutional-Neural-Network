@@ -4,7 +4,7 @@ class sample_t {
     int *y;
 }
 
-enum layer_type {SIGM, SOFT, TANH, RELU, CONV}
+enum layer_type {SIGM, SOFT, TANH, RELU, CONV};
 
 class model {
   private:
