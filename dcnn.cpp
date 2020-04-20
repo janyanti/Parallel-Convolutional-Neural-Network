@@ -13,16 +13,17 @@ using namespace matrix;
 
 namespace dcnn {
 
-void model::train(std::vector<sample_t> samples, int num_samples, int input_rows,
-                  int input_cols, int output_rows, int output_cols) {
+void model::train(std::vector<sample_t> samples, int num_samples,
+                  int input_rows, int input_cols, int output_rows,
+                  int output_cols) {
   // iterators
   int e, s, i;
   // temp calculations
-  std::vector<matrix_t> linearComp(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> activationComp(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> gradLinear(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> gradActivation(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> gradWeights(num_layers, init(1,1,0.0));
+  std::vector<matrix_t> linearComp(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> activationComp(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> gradLinear(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> gradActivation(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> gradWeights(num_layers, init(1, 1, 0.0));
 
   // alloc weights
   std::vector<matrix_t> weights;
@@ -64,7 +65,7 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
         //   activationComp[i] = reluForward(linearComp[i]);
         //   break;
         default:
-          activationComp[i] = init(1,1,0.0);
+          activationComp[i] = init(1, 1, 0.0);
           break;
         }
       }
@@ -89,7 +90,7 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
         // case RELU:
         //   gradLinear[i] = reluBackward(linearComp[i], activationComp[i],
         default:
-          gradLinear[i] = init(1,1,0.0);
+          gradLinear[i] = init(1, 1, 0.0);
           break;
         }
         if (i == 0)

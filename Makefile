@@ -2,7 +2,7 @@ EXECUTABLE := cnn
 LDFLAGS=-L/usr/local/depot/cuda-10.2/lib64/ -lcudart
 CU_FILES   := cudaRenderer.cu
 CU_DEPS    :=
-CC_FILES   := main.cpp matrix.cpp dcnn.cpp
+CC_FILES   := main.cpp matrix.cpp dcnn.cpp parse_file.cpp
 LOGS	   	 := logs
 
 all: $(EXECUTABLE)
@@ -18,7 +18,7 @@ LDFRAMEWORKS := $(addprefix -framework , $(FRAMEWORKS))
 
 NVCC=nvcc
 
-OBJS=$(OBJDIR)/main.o $(OBJDIR)/matrix.o $(OBJDIR)/dcnn.o
+OBJS=$(OBJDIR)/main.o $(OBJDIR)/matrix.o $(OBJDIR)/dcnn.o $(OBJDIR)/parse_file.o
 
 .PHONY: dirs clean
 

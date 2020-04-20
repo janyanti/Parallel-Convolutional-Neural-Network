@@ -13,6 +13,7 @@
 #include <string>
 
 #include "matrix.h"
+#include "parse_file.h"
 
 using namespace matrix;
 
@@ -51,6 +52,20 @@ void matrix_test() {
 int main(int argc, char** argv) {
 
   //matrix_test();
+  if (argc < 3) {
+    fprintf(stdout, "Incorrect number of parameters\n");
+  }
+
+  int num_labels = 10;
+
+  matrix_t train_data;
+  matrix_t train_labels;
+
+  pfile::read_images(argv[1], train_data);
+  pfile::read_labels(argv[2], num_labels, train_labels);
+
+  display(train_labels[0]);
+
   return 0;
 
 }
