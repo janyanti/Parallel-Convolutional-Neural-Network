@@ -13,8 +13,10 @@
 #include <string>
 
 #include "matrix.h"
+#include "dcnn.h"
 
 using namespace matrix;
+using namespace dcnn;
 
 void matrix_test() {
   /* vector tests */
@@ -47,10 +49,46 @@ void matrix_test() {
 
 }
 
+void nn_test() {
+  std::vector<int> unitcounts = {5, 10};
+  std::vector<layer_type_t> layers = {SIGM, SOFT};
+  model_t m(2, unitcounts, layers, .1, 1);
+
+  int numsamples = 2;
+  int inputRows = 5;
+  int inputCols = 1;
+  int outputRows = 10;
+  int outputCols = 1;
+
+  matrix_t x1, y1;
+  x1 = init(inputRows + 1, inputCols, 0.0);
+  x1[0][0] = 1.0;
+  x1[1+1][0] = 1.0;
+  x1[2+1][0] = 1.0;
+  x1[3+1][0] = 1.0;
+  y1 = init(outputRows, outputCols, 0.0);
+  y1[7][0] = 1.0;
+  sample_t s1(x1, y1);
+
+  matrix_t x2, y2;
+  x2 = init(inputRows + 1, inputCols, 0.0);
+  x2[0][0] = 1.0;
+  x2[3+1][0] = 1.0;
+  y2 = init(outputRows, outputCols, 0.0);
+  y2[9][0] = 1.0;
+  sample_t s2(x2, y2);
+
+  std::vector<sample_t> samples = {s1, s2};
+  
+  m.train(samples, numsamples, inputRows, inputCols, outputRows, outputCols);
+  return;
+}
+
 
 int main(int argc, char** argv) {
 
   //matrix_test();
+  nn_test();
   return 0;
 
 }

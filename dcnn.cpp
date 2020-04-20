@@ -13,7 +13,7 @@ using namespace matrix;
 
 namespace dcnn {
 
-void model::train(std::vector<sample_t> samples, int num_samples, int input_rows,
+void model_t::train(std::vector<sample_t> samples, int num_samples, int input_rows,
                   int input_cols, int output_rows, int output_cols) {
   // iterators
   int e, s, i;
@@ -36,7 +36,7 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
     }
 
     if (i == 0) {
-      cols = input_rows;
+      cols = input_rows + 1;
     } else {
       cols = num_units[i - 1] + 1;
     }
@@ -49,7 +49,7 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
       sample_t sample = samples[s];
       // forward computation
       for (i = 0; i < num_layers; i++) {
-        linearComp[i] = linearForward(sample.x, weights[i]);
+        linearComp[i] = linearForward(sample.getX(), weights[i]);
         switch (layer_types[i]) {
         case SIGM:
           activationComp[i] = sigmForward(linearComp[i]);
@@ -68,11 +68,11 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
           break;
         }
       }
-      double J = crossEntropyForward(sample.y, activationComp[num_layers - 1]);
+      double J = crossEntropyForward(sample.getY(), activationComp[num_layers - 1]);
 
       // backward computation
       double gJ = 1.0;
-      // gradActivation[num_layers - 1] = crossEntropyBackward(samples.y,
+      // gradActivation[num_layers - 1] = crossEntropyBackward(samples.getY(),
       // activationComp[num_layers-1], J, gJ);
       for (i = num_layers - 1; i > 0; i--) {
         switch (layer_types[i]) {
@@ -81,7 +81,7 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
               sigmBackward(linearComp[i], activationComp[i], gradActivation[i]);
           break;
         case SOFT:
-          gradLinear[i] = softBackward(sample.y, linearComp[i],
+          gradLinear[i] = softBackward(sample.getY(), linearComp[i],
                                        activationComp[i], gradActivation[i]);
           break;
         // case TANH:
@@ -93,7 +93,7 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
           break;
         }
         if (i == 0)
-          gradWeights[i] = linearBackward1(sample.x, gradLinear[i]);
+          gradWeights[i] = linearBackward1(sample.getX(), gradLinear[i]);
         else
           gradWeights[i] =
               linearBackward1(activationComp[i - 1], gradLinear[i]);
@@ -107,20 +107,23 @@ void model::train(std::vector<sample_t> samples, int num_samples, int input_rows
       }
     }
   }
+  for (i = 0; i < num_layers; i++) {
+    display(weights[i]);
+  }
 }
 
-matrix_t model::linearForward(matrix_t a, matrix_t b) { return dot(b, a); }
+matrix_t model_t::linearForward(matrix_t a, matrix_t b) { return dot(b, a); }
 
-matrix_t model::linearBackward1(matrix_t a, matrix_t b) {
+matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
   return dot(b, transpose(a));
 }
 
-matrix_t model::linearBackward2(matrix_t a, matrix_t b) {
+matrix_t model_t::linearBackward2(matrix_t a, matrix_t b) {
   matrix_t trA = transpose(a);
   return dot(slice(trA, 1, trA.size()), b);
 }
 
-matrix_t model::sigmForward(matrix_t v) {
+matrix_t model_t::sigmForward(matrix_t v) {
   vec_t ones = init(1, 1.);
   matrix_t res;
   res = multiply(v, -1.);
@@ -139,7 +142,7 @@ matrix_t model::sigmForward(matrix_t v) {
   return res;
 }
 
-matrix_t model::sigmBackward(matrix_t linearComp, matrix_t activationComp,
+matrix_t model_t::sigmBackward(matrix_t linearComp, matrix_t activationComp,
                              matrix_t gradActivation) {
   size_t n = gradActivation.size();
   size_t m = gradActivation[0].size();
@@ -153,39 +156,39 @@ matrix_t model::sigmBackward(matrix_t linearComp, matrix_t activationComp,
   return res;
 }
 
-// matrix_t model::tanhForward(matrix_t v)
+// matrix_t model_t::tanhForward(matrix_t v)
 // {
 //   return;
 // }
 //
-// matrix_t model::tanhBackward()
+// matrix_t model_t::tanhBackward()
 // {
 //   return;
 // }
 
-// matrix_t model::reluForward(matrix_t v)
+// matrix_t model_t::reluForward(matrix_t v)
 // {
 //   return;
 // }
 //
-// matrix_t model::reluBackward()
+// matrix_t model_t::reluBackward()
 // {
 //   return;
 // }
 
-matrix_t model::softForward(matrix_t v) {
+matrix_t model_t::softForward(matrix_t v) {
   matrix_t exp_prev = exp(v);
   return divide(exp_prev, sum(exp_prev));
 }
 
-matrix_t model::softBackward(matrix_t y, matrix_t linearComp,
+matrix_t model_t::softBackward(matrix_t y, matrix_t linearComp,
                              matrix_t activationComp, matrix_t gradActivation) {
   return subtract(activationComp, y);
 }
 
-double model::crossEntropyForward(matrix_t v, matrix_t vh) { return 1.0; }
+double model_t::crossEntropyForward(matrix_t v, matrix_t vh) { return 1.0; }
 
-// double model::crossEntropyBackward()
+// double model_t::crossEntropyBackward()
 // {
 //   return;
 // }
