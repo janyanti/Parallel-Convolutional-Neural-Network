@@ -52,7 +52,7 @@ void matrix_test() {
 void nn_test() {
   std::vector<int> unitcounts = {5, 10};
   std::vector<layer_type_t> layers = {SIGM, SOFT};
-  model_t m(2, unitcounts, layers, .1, 1);
+  model_t m(2, unitcounts, layers, .1, 50);
 
   int numsamples = 2;
   int inputRows = 5;

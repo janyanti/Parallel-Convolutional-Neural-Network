@@ -47,9 +47,18 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
   for (e = 0; e < num_epochs; e++) {
     for (s = 0; s < num_samples; s++) {
       sample_t sample = samples[s];
+      printf("s = %d\n", s);
+      display(sample.getX());
+      display(sample.getY());
       // forward computation
       for (i = 0; i < num_layers; i++) {
-        linearComp[i] = linearForward(sample.getX(), weights[i]);
+        if (i == 0)
+          linearComp[i] = linearForward(sample.getX(), weights[i]);
+        else 
+          linearComp[i] = linearForward(activationComp[i-1], weights[i]);
+        
+        printf("a/b = \n");
+        display(linearComp[i]);
         switch (layer_types[i]) {
         case SIGM:
           activationComp[i] = sigmForward(linearComp[i]);
@@ -67,14 +76,19 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
           activationComp[i] = init(1,1,0.0);
           break;
         }
+        printf("z/yh = \n");
+        display(activationComp[i]);
       }
       double J = crossEntropyForward(sample.getY(), activationComp[num_layers - 1]);
-
+      // printf("%f\n", J);
       // backward computation
       double gJ = 1.0;
       // gradActivation[num_layers - 1] = crossEntropyBackward(samples.getY(),
       // activationComp[num_layers-1], J, gJ);
-      for (i = num_layers - 1; i > 0; i--) {
+      // gradActivation[num_layers - 1] = ...
+      // printf("gyh/gz = \n");
+      // display(gradActivation[num_layers - 1]);
+      for (i = num_layers - 1; i >= 0; i--) {
         switch (layer_types[i]) {
         case SIGM:
           gradLinear[i] =
@@ -92,27 +106,39 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
           gradLinear[i] = init(1,1,0.0);
           break;
         }
-        if (i == 0)
+        printf("gb/ga = \n");
+        display(gradLinear[i]);
+        if (i == 0) {
           gradWeights[i] = linearBackward1(sample.getX(), gradLinear[i]);
-        else
+          printf("gB/gA = \n");
+          display(gradWeights[i]);
+        } else {
           gradWeights[i] =
               linearBackward1(activationComp[i - 1], gradLinear[i]);
-        gradActivation[i - 1] = linearBackward2(weights[i], gradLinear[i]);
+          printf("gB/gA = \n");
+          display(gradWeights[i]);
+          gradActivation[i - 1] = linearBackward2(weights[i], gradLinear[i]);
+          printf("gyh/gz = \n"); 
+          display(gradActivation[i-1]);
+        }
+        
       }
-
       // update all the weights
       for (i = 0; i < num_layers; i++) {
         weights[i] =
             subtract(weights[i], multiply(gradWeights[i], learning_rate));
+        display(weights[i]);
       }
     }
   }
-  for (i = 0; i < num_layers; i++) {
-    display(weights[i]);
-  }
 }
 
-matrix_t model_t::linearForward(matrix_t a, matrix_t b) { return dot(b, a); }
+matrix_t model_t::linearForward(matrix_t a, matrix_t b) { 
+  printf("In linearForward x/z then A/B \n");
+  display(a);
+  display(b);
+  return dot(b, a); 
+}
 
 matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
   return dot(b, transpose(a));
@@ -120,7 +146,8 @@ matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
 
 matrix_t model_t::linearBackward2(matrix_t a, matrix_t b) {
   matrix_t trA = transpose(a);
-  return dot(slice(trA, 1, trA.size()), b);
+  matrix_t slicedA = slice(trA, 1, trA.size());
+  return dot(slicedA, b);
 }
 
 matrix_t model_t::sigmForward(matrix_t v) {
@@ -190,7 +217,7 @@ double model_t::crossEntropyForward(matrix_t v, matrix_t vh) { return 1.0; }
 
 // double model_t::crossEntropyBackward()
 // {
-//   return;
+//   return 0.0;
 // }
 
 }; // namespace dcnn
