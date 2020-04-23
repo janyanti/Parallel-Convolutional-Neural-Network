@@ -18,30 +18,46 @@ using namespace matrix;
 namespace dcnn {
 
 class sample_t {
-public:
+private:
   matrix_t x;
   matrix_t y;
+
+public:
+  // Constructor
+  sample_t(matrix_t inputX, matrix_t inputY) {
+    x = inputX;
+    y = inputY;
+  }
+
+  matrix_t getX() { return x; }
+
+  matrix_t getY() { return y; }
 };
 
-enum layer_type {
-  SIGM,
-  SOFT,
-  TANH,
-  RELU,
-  CONV
-};
+enum layer_type_t { SIGM, SOFT, TANH, RELU, CONV };
 
-class model {
+class model_t {
 private:
   int num_layers;
-  int *num_units;
-  layer_type *layer_types;
+  std::vector<int> num_units;
+  std::vector<layer_type_t> layer_types;
   double learning_rate;
   int num_epochs;
 
 public:
-  void train(std::vector<sample_t> samples, int num_samples, int input_rows, int input_cols,
-             int output_rows, int output_cols);
+  // Constructor
+  model_t(int numL, std::vector<int> numU, std::vector<layer_type_t> ltypes,
+          double lr, int e) {
+    num_layers = numL;
+    num_units = numU;
+    layer_types = ltypes;
+    learning_rate = lr;
+    num_epochs = e;
+  }
+
+public:
+  void train(std::vector<sample_t> samples, int num_samples, int input_rows,
+             int input_cols, int output_rows, int output_cols);
   matrix_t linearForward(matrix_t a, matrix_t b);
   matrix_t linearBackward1(matrix_t a, matrix_t b);
   matrix_t linearBackward2(matrix_t a, matrix_t b);

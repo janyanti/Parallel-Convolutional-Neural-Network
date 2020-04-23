@@ -52,6 +52,7 @@ matrix_t dot(matrix_t A, matrix_t B);
 matrix_t add(matrix_t A, matrix_t B);
 matrix_t subtract(matrix_t A, matrix_t B);
 matrix_t slice(matrix_t A, size_t n, size_t m);
+matrix_t vector_to_matrix(vec_t a, int n, int m);
 matrix_t init(size_t n, size_t m, double value);
 matrix_t randu(size_t n, size_t m);
 void display(matrix_t A);
