@@ -7,13 +7,15 @@
   TODO: Description of library functions
 */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
 
 #include "matrix.h"
 #include "dcnn.h"
+#include "parse_file.h"
+
 
 using namespace matrix;
 using namespace dcnn;
@@ -22,30 +24,29 @@ void matrix_test() {
   /* vector tests */
   size_t n = 5;
   size_t m = 5;
+  size_t k = 40;
 
   matrix_t A0 = init(n, m, 0.0);
   matrix_t A1 = init(n, m, 1.0);
   matrix_t A2 = randu(n, m);
+  matrix_t A3 = randu(m, n);
+
+  vec_t a = init(k, 1.0);
 
   display(A0);
   display(A1);
   display(A2);
-  printf("SUM 1: %lf \n", sum(A1));
-  printf("SUM 2: %lf \n", sum(A2));
-  printf("MEAN 1: %lf \n", mean(A1));
-  printf("MEAN 2: %lf \n", mean(A2));
-  printf("MAX: %lf \n", max(A2));
-  printf("MIN: %lf \n", min(A2));
-  printf("LOG: ");
-  display(log(A2));
-  printf("\n  EXP: ");
-  display(exp(A2));
-  printf("\n  TANH: ");
-  display(tanh(A2));
-  printf("\n  POW 2: ");
-  display(pow(A2, 2));
-  printf("\n  TRANS: ");
-  display(transpose(A2));
+  display(A3);
+
+  display(dot(A2, A3));
+  display(dot(A3, A2));
+
+  matrix_t B1 = vector_to_matrix(a, 5,8);
+  matrix_t B2 = vector_to_matrix(a, 8,5);
+
+  display(dot(B2, B1));
+  display(dot(B1, B2));
+
 
 }
 
@@ -84,11 +85,27 @@ void nn_test() {
   return;
 }
 
+void pfile_test(char **argv) {
+  int num_labels = 10;
 
-int main(int argc, char** argv) {
 
-  //matrix_test();
-  nn_test();
+  matrix_t train_data;
+  matrix_t train_labels;
+
+
+  pfile::read_images(argv[1], train_data);
+  pfile::read_labels(argv[2], num_labels, train_labels);
+  
+  display(train_data[0]);
+ 
+}
+
+int main(int argc, char **argv) {
+
+   pfile_test(argv);
+  // if (argc < 3) {
+  //   fprintf(stdout, "Incorrect number of parameters\n");
+  // }
+
   return 0;
-
 }

@@ -18,11 +18,11 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
   // iterators
   int e, s, i;
   // temp calculations
-  std::vector<matrix_t> linearComp(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> activationComp(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> gradLinear(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> gradActivation(num_layers, init(1,1,0.0));
-  std::vector<matrix_t> gradWeights(num_layers, init(1,1,0.0));
+  std::vector<matrix_t> linearComp(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> activationComp(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> gradLinear(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> gradActivation(num_layers, init(1, 1, 0.0));
+  std::vector<matrix_t> gradWeights(num_layers, init(1, 1, 0.0));
 
   // alloc weights
   std::vector<matrix_t> weights;
@@ -73,7 +73,7 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
         //   activationComp[i] = reluForward(linearComp[i]);
         //   break;
         default:
-          activationComp[i] = init(1,1,0.0);
+          activationComp[i] = init(1, 1, 0.0);
           break;
         }
         printf("z/yh = \n");
@@ -81,6 +81,7 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
       }
       double J = crossEntropyForward(sample.getY(), activationComp[num_layers - 1]);
       // printf("%f\n", J);
+
       // backward computation
       double gJ = 1.0;
       // gradActivation[num_layers - 1] = crossEntropyBackward(samples.getY(),
@@ -107,7 +108,7 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
                                        gradActivation[i]);
           break;
         default:
-          gradLinear[i] = init(1,1,0.0);
+          gradLinear[i] = init(1, 1, 0.0);
           break;
         }
         printf("gb/ga = \n");
@@ -187,6 +188,7 @@ matrix_t model_t::sigmBackward(matrix_t linearComp, matrix_t activationComp,
   return res;
 }
 
+
 matrix_t model_t::tanhForward(matrix_t v)
 {
   vec_t ones = init(1, 1.);
@@ -242,6 +244,7 @@ matrix_t model_t::reluBackward(matrix_t linearComp, matrix_t activationComp,
   }
   return res;
 }
+
 
 matrix_t model_t::softForward(matrix_t v) {
   matrix_t exp_prev = exp(v);
