@@ -54,10 +54,11 @@ private:
   std::vector<layer_type_t> layer_types;
   double learning_rate;
   int num_epochs;
+  std::vector<matrix_t> weights;
 
 public:
-  // Constructor 
-  model_t (int numL, std::vector<int> numU, 
+  // Constructor
+  model_t (int numL, std::vector<int> numU,
            std::vector<layer_type_t> ltypes, double lr, int e) {
 
     num_layers = numL;
@@ -69,7 +70,7 @@ public:
 
   void train(std::vector<sample_t> samples, int num_samples, int input_rows, int input_cols,
              int output_rows, int output_cols);
-
+  size_t predict(matrix_t x);
   matrix_t linearForward(matrix_t a, matrix_t b);
   matrix_t linearBackward1(matrix_t a, matrix_t b);
   matrix_t linearBackward2(matrix_t a, matrix_t b);

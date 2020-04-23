@@ -25,7 +25,6 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
   std::vector<matrix_t> gradWeights(num_layers, init(1, 1, 0.0));
 
   // alloc weights
-  std::vector<matrix_t> weights;
   int rows, cols;
   for (i = 0; i < num_layers; i++) {
     int rows = num_units[i];
@@ -47,18 +46,18 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
   for (e = 0; e < num_epochs; e++) {
     for (s = 0; s < num_samples; s++) {
       sample_t sample = samples[s];
-      printf("s = %d\n", s);
-      display(sample.getX());
-      display(sample.getY());
+      // printf("s = %d\n", s);
+      // display(sample.getX());
+      // display(sample.getY());
       // forward computation
       for (i = 0; i < num_layers; i++) {
         if (i == 0)
           linearComp[i] = linearForward(sample.getX(), weights[i]);
-        else 
+        else
           linearComp[i] = linearForward(activationComp[i-1], weights[i]);
-        
-        printf("a/b = \n");
-        display(linearComp[i]);
+
+        // printf("a/b = \n");
+        // display(linearComp[i]);
         switch (layer_types[i]) {
         case SIGM:
           activationComp[i] = sigmForward(linearComp[i]);
@@ -66,24 +65,24 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
         case SOFT:
           activationComp[i] = softForward(linearComp[i]);
           break;
-        // case TANH:
-        //   activationComp[i] = tanhForward(linearComp[i]);
-        //   break;
-        // case RELU:
-        //   activationComp[i] = reluForward(linearComp[i]);
-        //   break;
+        case TANH:
+          activationComp[i] = tanhForward(linearComp[i]);
+          break;
+        case RELU:
+          activationComp[i] = reluForward(linearComp[i]);
+          break;
         default:
           activationComp[i] = init(1, 1, 0.0);
           break;
         }
-        printf("z/yh = \n");
-        display(activationComp[i]);
+        // printf("z/yh = \n");
+        // display(activationComp[i]);
       }
-      double J = crossEntropyForward(sample.getY(), activationComp[num_layers - 1]);
+      // double J = crossEntropyForward(sample.getY(), activationComp[num_layers - 1]);
       // printf("%f\n", J);
 
       // backward computation
-      double gJ = 1.0;
+      // double gJ = 1.0;
       // gradActivation[num_layers - 1] = crossEntropyBackward(samples.getY(),
       // activationComp[num_layers-1], J, gJ);
       // gradActivation[num_layers - 1] = ...
@@ -92,7 +91,7 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
       for (i = num_layers - 1; i >= 0; i--) {
         switch (layer_types[i]) {
         case SIGM:
-          gradLinear[i] = sigmBackward(linearComp[i], activationComp[i], 
+          gradLinear[i] = sigmBackward(linearComp[i], activationComp[i],
                                        gradActivation[i]);
           break;
         case SOFT:
@@ -100,49 +99,124 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
                                        activationComp[i], gradActivation[i]);
           break;
         case TANH:
-          gradLinear[i] = tanhBackward(linearComp[i], activationComp[i], 
+          gradLinear[i] = tanhBackward(linearComp[i], activationComp[i],
                                        gradActivation[i]);
           break;
         case RELU:
-          gradLinear[i] = reluBackward(linearComp[i], activationComp[i], 
+          gradLinear[i] = reluBackward(linearComp[i], activationComp[i],
                                        gradActivation[i]);
           break;
         default:
           gradLinear[i] = init(1, 1, 0.0);
           break;
         }
-        printf("gb/ga = \n");
-        display(gradLinear[i]);
+        // printf("gb/ga = \n");
+        // display(gradLinear[i]);
         if (i == 0) {
           gradWeights[i] = linearBackward1(sample.getX(), gradLinear[i]);
-          printf("gB/gA = \n");
-          display(gradWeights[i]);
+          // printf("gB/gA = \n");
+          // display(gradWeights[i]);
         } else {
           gradWeights[i] =
               linearBackward1(activationComp[i - 1], gradLinear[i]);
-          printf("gB/gA = \n");
-          display(gradWeights[i]);
+          // printf("gB/gA = \n");
+          // display(gradWeights[i]);
           gradActivation[i - 1] = linearBackward2(weights[i], gradLinear[i]);
-          printf("gyh/gz = \n"); 
-          display(gradActivation[i-1]);
+          // printf("gyh/gz = \n");
+          // display(gradActivation[i-1]);
         }
-        
+
       }
       // update all the weights
       for (i = 0; i < num_layers; i++) {
         weights[i] =
             subtract(weights[i], multiply(gradWeights[i], learning_rate));
-        display(weights[i]);
       }
     }
+
+    double totalEntropy = 0.0;
+    for (s = 0; s < num_samples; s++) {
+      matrix_t comp;
+      for (i = 0; i < num_layers; i++) {
+        if (i == 0)
+          comp = linearForward(samples[s].getX(), weights[i]);
+        else
+          comp = linearForward(comp, weights[i]);
+
+        switch (layer_types[i]) {
+        case SIGM:
+          comp = sigmForward(comp);
+          break;
+        case SOFT:
+          comp = softForward(comp);
+          break;
+        case TANH:
+          comp = tanhForward(comp);
+          break;
+        case RELU:
+          comp = reluForward(comp);
+          break;
+        default:
+          comp = init(1, 1, 0.0);
+          break;
+        }
+      }
+      totalEntropy += crossEntropyForward(samples[s].getY(), comp);
+    }
+    printf("epoch = %d avgEntropy = %f\n", e, totalEntropy/num_samples);
+  }
+
+  for (i = 0; i < num_layers; i++) {
+    display(weights[i]);
   }
 }
 
-matrix_t model_t::linearForward(matrix_t a, matrix_t b) { 
-  printf("In linearForward x/z then A/B \n");
-  display(a);
-  display(b);
-  return dot(b, a); 
+size_t model_t::predict(matrix_t x) {
+  // forward computation
+  int i;
+  matrix_t comp;
+  for (i = 0; i < num_layers; i++) {
+    if (i == 0)
+      comp = linearForward(x, weights[i]);
+    else
+      comp = linearForward(comp, weights[i]);
+
+    switch (layer_types[i]) {
+    case SIGM:
+      comp = sigmForward(comp);
+      break;
+    case SOFT:
+      comp = softForward(comp);
+      break;
+    case TANH:
+      comp = tanhForward(comp);
+      break;
+    case RELU:
+      comp = reluForward(comp);
+      break;
+    default:
+      comp = init(1, 1, 0.0);
+      break;
+    }
+  }
+  // now that we have the final computation we can turn it into a one-hot vector
+  double maxVal = max(comp);
+  matrix_t yh = init(comp.size(), 1, 0.0);
+  for (int i = 0; i < comp.size(); i++) {
+    if (comp[i][0] == maxVal) {
+      return i;
+    }
+  }
+
+  // should never reach this line
+  return 0;
+}
+
+matrix_t model_t::linearForward(matrix_t a, matrix_t b) {
+  // printf("In linearForward x/z then A/B \n");
+  // display(a);
+  // display(b);
+  return dot(b, a);
 }
 
 matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
@@ -256,7 +330,14 @@ matrix_t model_t::softBackward(matrix_t y, matrix_t linearComp,
   return subtract(activationComp, y);
 }
 
-double model_t::crossEntropyForward(matrix_t v, matrix_t vh) { return 1.0; }
+double model_t::crossEntropyForward(matrix_t v, matrix_t vh) {
+  matrix_t lvh = log(vh);
+  double crossEntropy = 0.0;
+  for (int i = 0; i < v.size(); i++) {
+    crossEntropy -= v[i][0] * lvh[i][0];
+  }
+  return crossEntropy;
+}
 
 // double model_t::crossEntropyBackward()
 // {
