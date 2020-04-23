@@ -406,11 +406,11 @@ matrix_t transpose(matrix_t A) {
   // Assert ns >= 1
   size_t m = A[0].size();
 
-  matrix_t B = init(n, m, 0.0);
+  matrix_t B = init(m, n, 0.0);
 
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      B[i][j] = A[j][i];
+      B[j][i] = A[i][j];
     }
   }
 
@@ -548,12 +548,14 @@ matrix_t subtract(matrix_t A, matrix_t B) {
 /*
 
 */
-matrix_t slice(matrix_t A, size_t n, size_t m) {
-  auto first = A.begin() + n;
-  auto last = A.begin() + m + 1;
-
-  matrix_t B(first, last);
-
+matrix_t slice(matrix_t A, size_t start, size_t end) {
+  size_t rows = end-start;
+  size_t cols = A[0].size();
+  matrix_t B;
+  for (size_t i = 0; i < rows; i++) {
+    vec_t v(A[start+i]);
+    B.push_back(v);
+  }
   return B;
 }
 

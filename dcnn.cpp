@@ -13,9 +13,8 @@ using namespace matrix;
 
 namespace dcnn {
 
-void model_t::train(std::vector<sample_t> samples, int num_samples,
-                  int input_rows, int input_cols, int output_rows,
-                  int output_cols) {
+void model_t::train(std::vector<sample_t> samples, int num_samples, int input_rows,
+                  int input_cols, int output_rows, int output_cols) {
   // iterators
   int e, s, i;
   // temp calculations
@@ -48,9 +47,18 @@ void model_t::train(std::vector<sample_t> samples, int num_samples,
   for (e = 0; e < num_epochs; e++) {
     for (s = 0; s < num_samples; s++) {
       sample_t sample = samples[s];
+      printf("s = %d\n", s);
+      display(sample.getX());
+      display(sample.getY());
       // forward computation
       for (i = 0; i < num_layers; i++) {
-        linearComp[i] = linearForward(sample.getX(), weights[i]);
+        if (i == 0)
+          linearComp[i] = linearForward(sample.getX(), weights[i]);
+        else 
+          linearComp[i] = linearForward(activationComp[i-1], weights[i]);
+        
+        printf("a/b = \n");
+        display(linearComp[i]);
         switch (layer_types[i]) {
         case SIGM:
           activationComp[i] = sigmForward(linearComp[i]);
@@ -68,49 +76,74 @@ void model_t::train(std::vector<sample_t> samples, int num_samples,
           activationComp[i] = init(1, 1, 0.0);
           break;
         }
+        printf("z/yh = \n");
+        display(activationComp[i]);
       }
       double J = crossEntropyForward(sample.getY(), activationComp[num_layers - 1]);
+      // printf("%f\n", J);
 
       // backward computation
       double gJ = 1.0;
-      // gradActivation[num_layers - 1] = crossEntropyBackward(samples.y,
+      // gradActivation[num_layers - 1] = crossEntropyBackward(samples.getY(),
       // activationComp[num_layers-1], J, gJ);
-      for (i = num_layers - 1; i > 0; i--) {
+      // gradActivation[num_layers - 1] = ...
+      // printf("gyh/gz = \n");
+      // display(gradActivation[num_layers - 1]);
+      for (i = num_layers - 1; i >= 0; i--) {
         switch (layer_types[i]) {
         case SIGM:
-          gradLinear[i] =
-              sigmBackward(linearComp[i], activationComp[i], gradActivation[i]);
+          gradLinear[i] = sigmBackward(linearComp[i], activationComp[i], 
+                                       gradActivation[i]);
           break;
         case SOFT:
           gradLinear[i] = softBackward(sample.getY(), linearComp[i],
                                        activationComp[i], gradActivation[i]);
           break;
-        // case TANH:
-        //   gradLinear[i] = tanhBackward(linearComp[i], activationComp[i],
-        // case RELU:
-        //   gradLinear[i] = reluBackward(linearComp[i], activationComp[i],
+        case TANH:
+          gradLinear[i] = tanhBackward(linearComp[i], activationComp[i], 
+                                       gradActivation[i]);
+          break;
+        case RELU:
+          gradLinear[i] = reluBackward(linearComp[i], activationComp[i], 
+                                       gradActivation[i]);
+          break;
         default:
           gradLinear[i] = init(1, 1, 0.0);
           break;
         }
-        if (i == 0)
+        printf("gb/ga = \n");
+        display(gradLinear[i]);
+        if (i == 0) {
           gradWeights[i] = linearBackward1(sample.getX(), gradLinear[i]);
-        else
+          printf("gB/gA = \n");
+          display(gradWeights[i]);
+        } else {
           gradWeights[i] =
               linearBackward1(activationComp[i - 1], gradLinear[i]);
-        gradActivation[i - 1] = linearBackward2(weights[i], gradLinear[i]);
+          printf("gB/gA = \n");
+          display(gradWeights[i]);
+          gradActivation[i - 1] = linearBackward2(weights[i], gradLinear[i]);
+          printf("gyh/gz = \n"); 
+          display(gradActivation[i-1]);
+        }
+        
       }
-
       // update all the weights
       for (i = 0; i < num_layers; i++) {
         weights[i] =
             subtract(weights[i], multiply(gradWeights[i], learning_rate));
+        display(weights[i]);
       }
     }
   }
 }
 
-matrix_t model_t::linearForward(matrix_t a, matrix_t b) { return dot(b, a); }
+matrix_t model_t::linearForward(matrix_t a, matrix_t b) { 
+  printf("In linearForward x/z then A/B \n");
+  display(a);
+  display(b);
+  return dot(b, a); 
+}
 
 matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
   return dot(b, transpose(a));
@@ -118,7 +151,8 @@ matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
 
 matrix_t model_t::linearBackward2(matrix_t a, matrix_t b) {
   matrix_t trA = transpose(a);
-  return dot(slice(trA, 1, trA.size()), b);
+  matrix_t slicedA = slice(trA, 1, trA.size());
+  return dot(slicedA, b);
 }
 
 matrix_t model_t::sigmForward(matrix_t v) {
@@ -154,25 +188,63 @@ matrix_t model_t::sigmBackward(matrix_t linearComp, matrix_t activationComp,
   return res;
 }
 
-// matrix_t model_t::tanhForward(matrix_t v)
-// {
-//   return;
-// }
-//
-// matrix_t model_t::tanhBackward()
-// {
-//   return;
-// }
 
-// matrix_t model_t::reluForward(matrix_t v)
-// {
-//   return;
-// }
-//
-// matrix_t model_t::reluBackward()
-// {
-//   return;
-// }
+matrix_t model_t::tanhForward(matrix_t v)
+{
+  vec_t ones = init(1, 1.);
+  matrix_t res = tanh(v);
+  res.insert(res.begin(), ones);
+  return res;
+}
+
+matrix_t model_t::tanhBackward(matrix_t linearComp, matrix_t activationComp,
+                             matrix_t gradActivation)
+{
+  size_t n = gradActivation.size();
+  size_t m = gradActivation[0].size();
+  matrix_t res = init(n, m, 0.0);
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < m; j++) {
+      double temp = activationComp[i + 1][j];
+      res[i][j] = gradActivation[i][j] * (1.0 - temp*temp);
+    }
+  }
+  return res;
+}
+
+matrix_t model_t::reluForward(matrix_t A)
+{
+  size_t ns = A.size();
+  // Assert ns >= 1
+  size_t ms = A[0].size();
+
+  matrix_t B = init(ns, ms, 0.0);
+
+  for (size_t i = 0; i < ns; i++) {
+    for (size_t j = 0; j < ms; j++) {
+      B[i][j] = std::max(0.0, A[i][j]);
+    }
+  }
+  vec_t ones = init(1, 1.);
+  B.insert(B.begin(), ones);
+  return B;
+}
+
+matrix_t model_t::reluBackward(matrix_t linearComp, matrix_t activationComp,
+                             matrix_t gradActivation)
+{
+  size_t n = gradActivation.size();
+  size_t m = gradActivation[0].size();
+  matrix_t res = init(n, m, 0.0);
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < m; j++) {
+      double temp = activationComp[i + 1][j];
+      res[i][j] = temp == 0.0 ? 0 : 1.0;
+    }
+  }
+  return res;
+}
+
 
 matrix_t model_t::softForward(matrix_t v) {
   matrix_t exp_prev = exp(v);
@@ -188,7 +260,7 @@ double model_t::crossEntropyForward(matrix_t v, matrix_t vh) { return 1.0; }
 
 // double model_t::crossEntropyBackward()
 // {
-//   return;
+//   return 0.0;
 // }
 
 }; // namespace dcnn

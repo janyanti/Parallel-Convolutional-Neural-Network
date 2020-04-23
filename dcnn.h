@@ -24,17 +24,28 @@ private:
 
 public:
   // Constructor
-  sample_t(matrix_t inputX, matrix_t inputY) {
-    x = inputX;
-    y = inputY;
+  sample_t (matrix_t inputX, matrix_t inputY) {
+     x = inputX;
+     y = inputY;
   }
 
-  matrix_t getX() { return x; }
+  matrix_t getX() {
+    return x;
+  }
 
-  matrix_t getY() { return y; }
+  matrix_t getY() {
+    return y;
+  }
 };
 
-enum layer_type_t { SIGM, SOFT, TANH, RELU, CONV };
+enum layer_type_t {
+  SIGM,
+  SOFT,
+  TANH,
+  RELU,
+  CONV
+};
+
 
 class model_t {
 private:
@@ -45,9 +56,10 @@ private:
   int num_epochs;
 
 public:
-  // Constructor
-  model_t(int numL, std::vector<int> numU, std::vector<layer_type_t> ltypes,
-          double lr, int e) {
+  // Constructor 
+  model_t (int numL, std::vector<int> numU, 
+           std::vector<layer_type_t> ltypes, double lr, int e) {
+
     num_layers = numL;
     num_units = numU;
     layer_types = ltypes;
@@ -55,9 +67,9 @@ public:
     num_epochs = e;
   }
 
-public:
-  void train(std::vector<sample_t> samples, int num_samples, int input_rows,
-             int input_cols, int output_rows, int output_cols);
+  void train(std::vector<sample_t> samples, int num_samples, int input_rows, int input_cols,
+             int output_rows, int output_cols);
+
   matrix_t linearForward(matrix_t a, matrix_t b);
   matrix_t linearBackward1(matrix_t a, matrix_t b);
   matrix_t linearBackward2(matrix_t a, matrix_t b);
@@ -68,10 +80,12 @@ public:
   matrix_t softBackward(matrix_t y, matrix_t linearComp,
                         matrix_t activationComp, matrix_t gradActivation);
   double crossEntropyForward(matrix_t v, matrix_t vh);
-  // matrix_t tanhForward(matrix_t v);
-  // matrix_t tanhBackward();
-  // matrix_t reluForward(matrix_t v);
-  // matrix_t reluBackward();
+  matrix_t tanhForward(matrix_t v);
+  matrix_t tanhBackward(matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
+  matrix_t reluForward(matrix_t v);
+  matrix_t reluBackward(matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
   // double crossEntropyBackward();
 };
 
