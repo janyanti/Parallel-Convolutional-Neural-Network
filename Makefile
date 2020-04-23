@@ -2,7 +2,7 @@ EXECUTABLE := cnn
 LDFLAGS=-L/usr/local/depot/cuda-10.2/lib64/ -lcudart
 CU_FILES   := cudaRenderer.cu
 CU_DEPS    :=
-CC_FILES   := main.cpp matrix.cpp dcnn.cpp parse_file.cpp
+CC_FILES   := dcnn.cpp main.cpp matrix.cpp  parse_file.cpp
 LOGS	   	 := logs
 
 all: $(EXECUTABLE)

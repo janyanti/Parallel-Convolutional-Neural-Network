@@ -565,18 +565,20 @@ matrix_t slice(matrix_t A, size_t start, size_t end) {
 matrix_t vector_to_matrix(vec_t a, size_t n, size_t m) {
   size_t len = a.size();
 
-  if (n * m != k) {
+  if (n * m != len) {
     printf("Incorrect dimensions for vector reshape \n");
     exit(0);
   }
 
   matrix_t A = init(n, m, 0.0);
 
-  for (size_t k = 0; k < len; i++) {
+  for (size_t k = 0; k < len; k++) {
     size_t i = k / m;
     size_t j = k % m;
-    A[r][c] = a[k];
+    A[i][j] = a[k];
   }
+
+  return A;
 
 }
 
