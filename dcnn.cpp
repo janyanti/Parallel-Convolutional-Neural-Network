@@ -91,17 +91,21 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
       for (i = num_layers - 1; i >= 0; i--) {
         switch (layer_types[i]) {
         case SIGM:
-          gradLinear[i] =
-              sigmBackward(linearComp[i], activationComp[i], gradActivation[i]);
+          gradLinear[i] = sigmBackward(linearComp[i], activationComp[i], 
+                                       gradActivation[i]);
           break;
         case SOFT:
           gradLinear[i] = softBackward(sample.getY(), linearComp[i],
                                        activationComp[i], gradActivation[i]);
           break;
-        // case TANH:
-        //   gradLinear[i] = tanhBackward(linearComp[i], activationComp[i],
-        // case RELU:
-        //   gradLinear[i] = reluBackward(linearComp[i], activationComp[i],
+        case TANH:
+          gradLinear[i] = tanhBackward(linearComp[i], activationComp[i], 
+                                       gradActivation[i]);
+          break;
+        case RELU:
+          gradLinear[i] = reluBackward(linearComp[i], activationComp[i], 
+                                       gradActivation[i]);
+          break;
         default:
           gradLinear[i] = init(1,1,0.0);
           break;
@@ -183,25 +187,61 @@ matrix_t model_t::sigmBackward(matrix_t linearComp, matrix_t activationComp,
   return res;
 }
 
-// matrix_t model_t::tanhForward(matrix_t v)
-// {
-//   return;
-// }
-//
-// matrix_t model_t::tanhBackward()
-// {
-//   return;
-// }
+matrix_t model_t::tanhForward(matrix_t v)
+{
+  vec_t ones = init(1, 1.);
+  matrix_t res = tanh(v);
+  res.insert(res.begin(), ones);
+  return res;
+}
 
-// matrix_t model_t::reluForward(matrix_t v)
-// {
-//   return;
-// }
-//
-// matrix_t model_t::reluBackward()
-// {
-//   return;
-// }
+matrix_t model_t::tanhBackward(matrix_t linearComp, matrix_t activationComp,
+                             matrix_t gradActivation)
+{
+  size_t n = gradActivation.size();
+  size_t m = gradActivation[0].size();
+  matrix_t res = init(n, m, 0.0);
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < m; j++) {
+      double temp = activationComp[i + 1][j];
+      res[i][j] = gradActivation[i][j] * (1.0 - temp*temp);
+    }
+  }
+  return res;
+}
+
+matrix_t model_t::reluForward(matrix_t A)
+{
+  size_t ns = A.size();
+  // Assert ns >= 1
+  size_t ms = A[0].size();
+
+  matrix_t B = init(ns, ms, 0.0);
+
+  for (size_t i = 0; i < ns; i++) {
+    for (size_t j = 0; j < ms; j++) {
+      B[i][j] = std::max(0.0, A[i][j]);
+    }
+  }
+  vec_t ones = init(1, 1.);
+  B.insert(B.begin(), ones);
+  return B;
+}
+
+matrix_t model_t::reluBackward(matrix_t linearComp, matrix_t activationComp,
+                             matrix_t gradActivation)
+{
+  size_t n = gradActivation.size();
+  size_t m = gradActivation[0].size();
+  matrix_t res = init(n, m, 0.0);
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < m; j++) {
+      double temp = activationComp[i + 1][j];
+      res[i][j] = temp == 0.0 ? 0 : 1.0;
+    }
+  }
+  return res;
+}
 
 matrix_t model_t::softForward(matrix_t v) {
   matrix_t exp_prev = exp(v);

@@ -76,10 +76,12 @@ public:
   matrix_t softBackward(matrix_t y, matrix_t linearComp,
                         matrix_t activationComp, matrix_t gradActivation);
   double crossEntropyForward(matrix_t v, matrix_t vh);
-  // matrix_t tanhForward(matrix_t v);
-  // matrix_t tanhBackward();
-  // matrix_t reluForward(matrix_t v);
-  // matrix_t reluBackward();
+  matrix_t tanhForward(matrix_t v);
+  matrix_t tanhBackward(matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
+  matrix_t reluForward(matrix_t v);
+  matrix_t reluBackward(matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
   // double crossEntropyBackward();
 };
 
