@@ -76,14 +76,14 @@ void read_labels(char *filepath, int num_labels, matrix::host_matrix_t &arr) {
   }
 }
 
-std::vector<dcnn::sample_t> create_sample(matrix::host_matrix_t data, matrix::host_matrix_t labels) {
+thrust::host_vector<dcnn::sample_t> create_sample(matrix::host_matrix_t data, matrix::host_matrix_t labels) {
   size_t n = data.size();
   size_t m = labels.size();
 
   size_t num_data = data[0].size();
   size_t num_labels = labels[0].size();
 
-  std::vector<dcnn::sample_t> samples;
+  thrust::host_vector<dcnn::sample_t> samples;
 
   if (n != m) {
     printf("Data for training and labels don't match \n");
@@ -96,7 +96,11 @@ std::vector<dcnn::sample_t> create_sample(matrix::host_matrix_t data, matrix::ho
     data_matrix.insert(data_matrix.begin(), ones);
     matrix::host_matrix_t label_matrix =
         matrix::vector_to_matrix(labels[i], num_labels, 1);
-    dcnn::sample_t sample(data_matrix, label_matrix);
+
+    dcnn::sample_t sample;
+    sample.push_back(data_matrix);
+    sample.push_back(label_matrix);
+    
     samples.push_back(sample);
   }
 
@@ -104,3 +108,5 @@ std::vector<dcnn::sample_t> create_sample(matrix::host_matrix_t data, matrix::ho
 }
 
 }; // namespace pfile
+
+

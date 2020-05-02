@@ -26,8 +26,8 @@ void real_test(char **argv) {
   host_matrix_t test_labels;
 
   int num_labels = 10;
-  std::vector<sample_t> train_samples;
-  std::vector<sample_t> test_samples;
+  thrust::host_vector<sample_t> train_samples;
+  thrust::host_vector<sample_t> test_samples;
 
   pfile::read_images(argv[1], train_data);
   pfile::read_labels(argv[2], num_labels, train_labels);
@@ -44,18 +44,44 @@ void real_test(char **argv) {
   int outputRows = num_labels;
   int outputCols = 1;
 
-  // init the NN
-  std::vector<int> unitcounts = {5, 8, outputRows};
-  std::vector<layer_type_t> layers = {SIGM, SIGM, SOFT};
-  model_t m(3, unitcounts, layers, .001, 75);
-  m.train(train_samples, numsamples, inputRows, inputCols, outputRows, outputCols);
+  /* Model stuff */
+  int num_layers = 3;
+  double learning_rate = .001;
+  int num_epochs = 75;
+
+  thrust::host_vector<int> num_units;
+  num_units.push_back(5);
+  num_units.push_back(8);
+  num_units.push_back(outputRows);
+  thrust::device_vector<int> device_num_units;
+  device_num_units.push_back(5);
+  device_num_units.push_back(8);
+  device_num_units.push_back(outputRows);
+
+
+  thrust::host_vector<layer_type_t> layer_types;
+  layer_types.push_back(SIGM);
+  layer_types.push_back(SIGM);
+  layer_types.push_back(SOFT);
+  thrust::device_vector<layer_type_t> device_layer_types;
+  device_layer_types.push_back(SIGM);
+  device_layer_types.push_back(SIGM);
+  device_layer_types.push_back(SOFT);
+
+  thrust::host_vector<host_matrix_t> weights;
+
+  train(train_samples, numsamples, inputRows, inputCols, outputRows, outputCols,
+        device_num_units, device_layer_types, num_layers, learning_rate, 
+        num_epochs, weights);
+
+  
 
   // test after training
   double correct;
   for (int i = 0; i < test_samples.size(); i++){
     sample_t s = test_samples[i];
-    size_t yh_index = m.predict(s.getX());
-    if (s.getY()[yh_index][0] == 1.0)
+    size_t yh_index = predict(weights, s[0], num_layers, layer_types);
+    if (s[1][yh_index][0] == 1.0)
       correct++;
   }
 
