@@ -16,7 +16,7 @@ namespace matrix {
 /* initialize random seed for random functions */
 std::random_device rd;
 std::mt19937 rand_gen(rd());
-std::uniform_real_distribution<> rand_dist(0, 1);
+std::uniform_real_distribution<> rand_dist(-1, 1);
 
 /*
 
@@ -244,6 +244,10 @@ void display(vec_t a) {
       printf("%lf, ", a[i]);
     }
   }
+}
+
+void clear(vec_t &a) {
+  memset(&a,0,sizeof(double)*a.size());
 }
 
 /*
@@ -630,6 +634,11 @@ void display(matrix_t A) {
     }
   }
   printf("] \n\n");
+}
+
+void clear(matrix_t &A) {
+
+  for(auto& x : A) ::memset(&x[0],0,sizeof(double)*x.size());
 }
 
 } // namespace matrix

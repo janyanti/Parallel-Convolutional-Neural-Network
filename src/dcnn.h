@@ -13,6 +13,8 @@
 
 #include "matrix.h"
 
+#define BATCH_SIZE 32
+
 using namespace matrix;
 
 namespace dcnn {

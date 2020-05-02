@@ -126,9 +126,10 @@ void real_test(char **argv) {
   int outputCols = 1;
 
   // init the NN
-  std::vector<int> unitcounts = {5, 8, outputRows};
-  std::vector<layer_type_t> layers = {SIGM, SIGM, SOFT};
-  model_t m(3, unitcounts, layers, .001, 75);
+  std::vector<int> unitcounts = {28, 12, outputRows};
+  std::vector<layer_type_t> layers = {TANH, TANH, SOFT};
+  size_t num_layers = layers.size();
+  model_t m(num_layers, unitcounts, layers, .00075, 75);
   m.train(train_samples, numsamples, inputRows, inputCols, outputRows, outputCols);
 
   // test after training
@@ -141,7 +142,7 @@ void real_test(char **argv) {
   }
 
   double error_rate = correct / ((double) test_samples.size());
-  printf("%f\n", error_rate);
+  printf("Accuracy: %% %.2f\n", 100. * error_rate);
 
 }
 

@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
+#include <string.h>
 #include <vector>
 
 namespace matrix {
@@ -35,6 +35,7 @@ vec_t subtract(vec_t a, vec_t b);
 vec_t init(size_t n, double value);
 vec_t randu(size_t n);
 void display(vec_t a);
+void clear(vec_t &a);
 
 /* Matrix functions */
 double sum(matrix_t A);
@@ -56,5 +57,6 @@ matrix_t vector_to_matrix(vec_t a, size_t n, size_t m);
 matrix_t init(size_t n, size_t m, double value);
 matrix_t randu(size_t n, size_t m);
 void display(matrix_t A);
+void clear(matrix_t &A);
 
 } // namespace matrix

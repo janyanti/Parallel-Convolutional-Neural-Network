@@ -11,16 +11,16 @@
 #include <fstream>
 #include <iostream>
 
-#define NUM_IMAGES 10000
+#define NUM_IMAGES 16384
 
 namespace pfile {
 
 int reverse_int(int i) {
   unsigned char ch1, ch2, ch3, ch4;
-  ch1 = i & 255;
-  ch2 = (i >> 8) & 255;
-  ch3 = (i >> 16) & 255;
-  ch4 = (i >> 24) & 255;
+  ch1 = i & 0xFF;
+  ch2 = (i >> 8) & 0xFF;
+  ch3 = (i >> 16) & 0xFF;
+  ch4 = (i >> 24) & 0xFF;
   return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
@@ -49,7 +49,7 @@ void read_images(char *filepath, matrix::matrix_t &arr) {
         for (int c = 0; c < n_cols; ++c) {
           unsigned char temp = 0;
           file.read((char *)&temp, sizeof(temp));
-          arr[i][(n_rows * r) + c] = (double)temp;
+          arr[i][(n_rows * r) + c] = (double)temp / 255.0;
         }
       }
     }
