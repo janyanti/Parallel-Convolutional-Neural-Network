@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 
-#define NUM_IMAGES 16384
+#define NUM_IMAGES 8192
 
 namespace pfile {
 

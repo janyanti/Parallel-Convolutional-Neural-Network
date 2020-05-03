@@ -24,7 +24,7 @@ dirs:
 		mkdir -p $(OBJDIR)/
 
 clean:
-		rm -rf $(OBJDIR) *~ $(EXECUTABLE) $(LOGS) *.ppm
+		rm -rf $(OBJDIR) *~ cnn-seq cnn-mpi $(LOGS) *.ppm
 
 cnn-seq: dirs $(OBJS)
 		$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)

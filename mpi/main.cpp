@@ -49,11 +49,11 @@ void real_test(char **argv) {
   int outputRows = num_labels;
   int outputCols = 1;
 
-  std::vector<int> unitcounts = {28, 12, outputRows};
+  std::vector<int> unitcounts = {16, 12, outputRows};
   std::vector<layer_type_t> layers = {TANH, TANH, SOFT};
   size_t num_layers = layers.size();
-  double learning_rate = 0.00075;
-  int num_epochs = 100;
+  double learning_rate = 0.001;
+  int num_epochs = 2;
 
   std::vector<matrix_t> weights;
 
