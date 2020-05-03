@@ -71,7 +71,7 @@ host_vec_t log(host_vec_t a) {
   size_t n = a.size();
 
   for (size_t i = 0; i < n; i++) {
-    result.push_back(math::log(a[i]));
+    result.push_back(::log(a[i]));
   }
 
   return result;
@@ -85,7 +85,7 @@ host_vec_t exp(host_vec_t a) {
   size_t n = a.size();
 
   for (size_t i = 0; i < n; i++) {
-    result.push_back(exp(a[i]));
+    result.push_back(::exp(a[i]));
   }
 
   return result;
@@ -99,7 +99,7 @@ host_vec_t tanh(host_vec_t a) {
   size_t n = a.size();
 
   for (size_t i = 0; i < n; i++) {
-    result.push_back(tanh(a[i]));
+    result.push_back(::tanh(a[i]));
   }
 
   return result;
@@ -114,7 +114,7 @@ host_vec_t pow(host_vec_t a, int exp) {
   host_vec_t b;
 
   for (size_t i = 0; i < n; i++) {
-    b.push_back(pow(a[i], exp));
+    b.push_back(::pow(a[i], exp));
   }
 
   return b;
@@ -338,7 +338,7 @@ host_matrix_t log(host_matrix_t A) {
 
   for (size_t i = 0; i < ns; i++) {
     for (size_t j = 0; j < ms; j++) {
-      B[i][j] = log(A[i][j]);
+      B[i][j] = ::log(A[i][j]);
     }
   }
 
@@ -359,7 +359,7 @@ host_matrix_t exp(host_matrix_t A) {
 
   for (size_t i = 0; i < ns; i++) {
     for (size_t j = 0; j < ms; j++) {
-      B[i][j] = exp(A[i][j]);
+      B[i][j] = ::exp(A[i][j]);
     }
   }
 
@@ -378,7 +378,7 @@ host_matrix_t tanh(host_matrix_t A) {
 
   for (size_t i = 0; i < ns; i++) {
     for (size_t j = 0; j < ms; j++) {
-      B[i][j] = tanh(A[i][j]);
+      B[i][j] = ::tanh(A[i][j]);
     }
   }
 
@@ -397,7 +397,7 @@ host_matrix_t pow(host_matrix_t A, int exp) {
 
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      B[i][j] = pow(A[i][j], exp);
+      B[i][j] = ::pow(A[i][j], exp);
     }
   }
 
@@ -639,217 +639,254 @@ void display(host_matrix_t A) {
 }
 
 
-/*
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
+/*
+// called by the host with dims <1,1>
 */
-inline __device__
-double sum(device_vec_t a) {
-  double result = 0.0;
-  size_t n = a.size();
+__global__
+void sum(size_t n, double* a, double* result) {
+  // double result = 0.0;
+  // size_t n = a.size();
 
   for (size_t i = 0; i < n; i++) {
-    result += a[i];
+    *result += a[i];
   }
 
-  return result;
+  return;
+}
+
+/*
+// called by the host with dims <1,1>
+*/
+// __global__
+// void mean(device_vec_t a, double* result) {
+//   double total = sum(a);
+//   double length = (double)a.size();
+//   // double result = 0.0;
+
+//   if (length > 0.0) {
+//     *result = *result + total / length;
+//   }
+
+//   return;
+// }
+
+/*
+// called by the host with dims <1,1>
+*/
+__global__
+void max(size_t n, double* a, double* result) { 
+  *result = a[0];
+  for (int i = 0; i < n; i++) {
+    if (a[i] > *result) *result = a[i];
+  }
+}
+
+/*
+// called by the host with dims <1,1>
+*/
+__global__
+void min(size_t n, double* a, double* result) {
+  *result = a[0];
+  for (int i = 0; i < n; i++) {
+    if (a[i] < *result) *result = a[i];
+  }
 }
 
 /*
 
 */
-inline __device__
-double mean(device_vec_t a) {
-  double total = sum(a);
-  double length = (double)a.size();
-  double result = 0.0;
+__global__
+void log(size_t n, double* a, double* b) {
+  // device_vec_t result;
+  // size_t n = a.size();
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
-  if (length > 0.0) {
-    result = total / length;
-  }
+  // for (size_t i = 0; i < n; i++) {
+  b[i] = ::log(a[i]);
+    // result.push_back();
+  // }
 
-  return result;
+  return;
 }
 
 /*
 
 */
-inline __device__
-double max(device_vec_t a) { return *thrust::max_element(a.begin(), a.end()); }
+__global__
+void exp(size_t n, double* a, double* b) {
+  // device_vec_t result;
+  // size_t n = a.size();
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
-/*
+  // for (size_t i = 0; i < n; i++) {
+  b[i] = ::exp(a[i]);
+    // result.push_back();
+  // }
 
-*/
-inline __device__
-double min(device_vec_t a) { return *thrust::min_element(a.begin(), a.end()); }
-
-/*
-
-*/
-inline __device__
-device_vec_t log(device_vec_t a) {
-  device_vec_t result;
-  size_t n = a.size();
-
-  for (size_t i = 0; i < n; i++) {
-    result.push_back(log(a[i]));
-  }
-
-  return result;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_vec_t exp(device_vec_t a) {
-  device_vec_t result;
-  size_t n = a.size();
+__global__
+void tanh(size_t n, double* a, double* b) {
+  // device_vec_t result;
+  // size_t n = a.size();
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
-  for (size_t i = 0; i < n; i++) {
-    result.push_back(exp(a[i]));
-  }
+  // for (size_t i = 0; i < n; i++) {
+  b[i] = ::tanh(a[i]);
+    // result.push_back(::tanh(a[i]));
+  // }
 
-  return result;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_vec_t tanh(device_vec_t a) {
-  device_vec_t result;
-  size_t n = a.size();
+__global__
+void pow(size_t n, double* a, int exp, double* b) {
+  // size_t n = a.size();
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
+  // device_vec_t b;
 
-  for (size_t i = 0; i < n; i++) {
-    result.push_back(tanh(a[i]));
-  }
+  // for (size_t i = 0; i < n; i++) {
+  b[i] = ::pow(a[i], exp);
+    // b.push_back(::pow(a[i], exp));
+  // }
 
-  return result;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_vec_t pow(device_vec_t a, int exp) {
-  size_t n = a.size();
+__global__
+void multiply(size_t n, double* a, double scalar, double* b) {
+  // device_vec_t result;
+  // size_t n = a.size();
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
-  device_vec_t b;
+  // for (size_t i = 0; i < n; i++) {
+  b[i] = scalar * a[i];
+    // result.push_back(scalar * (a[i]));
+  // }
 
-  for (size_t i = 0; i < n; i++) {
-    b.push_back(pow(a[i], exp));
-  }
-
-  return b;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_vec_t multiply(device_vec_t a, double scalar) {
-  device_vec_t result;
-  size_t n = a.size();
-
-  for (size_t i = 0; i < n; i++) {
-    result.push_back(scalar * (a[i]));
-  }
-
-  return result;
-}
-
-/*
-
-*/
-inline __device__
-device_vec_t divide(device_vec_t a, double scalar) {
-  device_vec_t result;
-  size_t n = a.size();
+__global__
+void divide(size_t n, double* a, double scalar, double* b) {
+  // device_vec_t result;
+  // size_t n = a.size();
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
   if (scalar == 0.0) {
     printf("Attempt to divide by zero \n");
   }
 
-  for (size_t i = 0; i < n; i++) {
-    result.push_back(a[i] / scalar);
-  }
+  // for (size_t i = 0; i < n; i++) {
+  b[i] = a[i]/ scalar;
+    // result.push_back(a[i] / scalar);
+  // }
 
-  return result;
+  return;
 }
 
 /*
 
 */
-inline __device__
-double dot(device_vec_t a, device_vec_t b) {
-  size_t n = a.size();
-  size_t m = b.size();
+__global__
+void dot(size_t n, double* a, double* b, double* result) {
+  // size_t n = a.size();
+  // size_t m = b.size();
 
-  double result = 0.0;
+  *result = 0.0;
 
-  if (n != m) {
-    printf("Incorrect dimensions for vector dot product\n");
-    exit(-1);
-  }
+  // if (n != m) {
+  //   printf("Incorrect dimensions for vector dot product\n");
+  //   exit(-1);
+  // }
 
   for (size_t i = 0; i < n; i++) {
-    result += a[i] * b[i];
+    *result += a[i] * b[i];
   }
 
-  return result;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_vec_t add(device_vec_t a, device_vec_t b) {
-  size_t n = a.size();
-  size_t m = b.size();
+__global__
+void add(size_t n, double* a, double* b, double* c) {
+  // size_t n = a.size();
+  // size_t m = b.size();
 
-  if (n != m) {
-    printf("Incorrect dimensions for vector addition \n");
-    exit(-1);
-  }
+  // if (n != m || m != c.size()) {
+  //   printf("Incorrect dimensions for vector addition \n");
+  //   exit(-1);
+  // }
 
-  device_vec_t c;
+  // device_vec_t c;
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
-  for (size_t i = 0; i < n; i++) {
-    c.push_back(a[i] + b[i]);
-  }
+  // for (size_t i = 0; i < n; i++) {
+  c[i] = (a[i] + b[i]);
+  // }
 
-  return c;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_vec_t subtract(device_vec_t a, device_vec_t b) {
-  size_t n = a.size();
-  size_t m = b.size();
+__global__
+void subtract(size_t n, double* a, double* b, double* c) {
+  // size_t n = a.size();
+  // size_t m = b.size();
 
-  if (n != m) {
-    printf("Incorrect dimensions for vector subtract \n");
-    exit(-1);
-  }
+  // if (n != m || m != c.size()) {
+  //   printf("Incorrect dimensions for vector subtract \n");
+  //   exit(-1);
+  // }
 
-  device_vec_t c;
+  // device_vec_t c;
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= n) return;
 
-  for (size_t i = 0; i < n; i++) {
-    c.push_back(a[i] - b[i]);
-  }
+  // for (size_t i = 0; i < n; i++) {
+  c[i] = (a[i] - b[i]);
+  // }
 
-  return c;
+  return;
 }
 
 /*
 
 */
-inline __device__
 device_vec_t device_init(size_t n, double value) {
   assert(n > 0);
   device_vec_t a;
+
+  a.resize(0);
 
   for (size_t i = 0; i < n; i++) {
     a.push_back(value);
@@ -858,7 +895,6 @@ device_vec_t device_init(size_t n, double value) {
   return a;
 }
 
-inline __device__
 device_vec_t device_randu(size_t n) {
   device_vec_t a = device_init(n, 0.0);
 
@@ -869,6 +905,7 @@ device_vec_t device_randu(size_t n) {
   return a;
 }
 
+/*
 inline __device__
 void display(device_vec_t a) {
   size_t n = a.size();
@@ -882,236 +919,248 @@ void display(device_vec_t a) {
     }
   }
 }
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 /*
 
 */
-inline __device__
-double sum(device_matrix_t A) {
-  size_t ns = A.size();
+__global__
+void sum(size_t n, size_t m, double** A, double* result) {
+  // size_t ns = A.size();
   // Assert ns >= 1
-  size_t ms = A[0].size();
-  double result = 0.0;
-
-  for (size_t i = 0; i < ns; i++) {
-    for (size_t j = 0; j < ms; j++) {
-      result += A[i][j];
-    }
-  }
-
-  return result;
-}
-
-/*
-
-*/
-inline __device__
-double mean(device_matrix_t A) {
-  size_t ns = A.size();
-  // Assert ns >= 1
-  size_t ms = A[0].size();
-  double total = sum(A);
-  double length = (double)(ns * ms);
-  double result = 0.0;
-
-  if (length > 0.0) {
-    result = total / length;
-  }
-
-  return result;
-}
-
-/*
-
-*/
-inline __device__
-double max(device_matrix_t A) {
-  size_t n = A.size();
-  double max, curr_val;
-  max = std::numeric_limits<double>::min();
-
-  for (size_t i = 0; i < n; i++) {
-    curr_val = *thrust::max_element(A[i].begin(), A[i].end());
-
-    if (curr_val > max) {
-      max = curr_val;
-    }
-  }
-  return max;
-}
-
-/*
-
-*/
-inline __device__
-double min(device_matrix_t A) {
-  size_t n = A.size();
-  double min, curr_val;
-  min = std::numeric_limits<double>::max();
-
-  for (size_t i = 0; i < n; i++) {
-    curr_val = *thrust::min_element(A[i].begin(), A[i].end());
-
-    if (curr_val < min) {
-      min = curr_val;
-    }
-  }
-  return min;
-}
-
-/*
-
-*/
-inline __device__
-device_matrix_t log(device_matrix_t A) {
-  size_t ns = A.size();
-  // Assert ns >= 1
-  size_t ms = A[0].size();
-
-  device_matrix_t result;
-
-  device_matrix_t B = device_init(ns, ms, 0.0);
-
-  for (size_t i = 0; i < ns; i++) {
-    for (size_t j = 0; j < ms; j++) {
-      B[i][j] = thrust::log(A[i][j]);
-    }
-  }
-
-  return B;
-}
-
-/*
-
-*/
-inline __device__
-device_matrix_t exp(device_matrix_t A) {
-  size_t ns = A.size();
-  // Assert ns >= 1
-  size_t ms = A[0].size();
-
-  device_matrix_t result;
-
-  device_matrix_t B = device_init(ns, ms, 0.0);
-
-  for (size_t i = 0; i < ns; i++) {
-    for (size_t j = 0; j < ms; j++) {
-      B[i][j] = thrust::exp(A[i][j]);
-    }
-  }
-
-  return B;
-}
-
-/*
-
-*/
-inline __device__
-device_matrix_t tanh(device_matrix_t A) {
-  size_t ns = A.size();
-  // Assert ns >= 1
-  size_t ms = A[0].size();
-
-  device_matrix_t B = device_init(ns, ms, 0.0);
-
-  for (size_t i = 0; i < ns; i++) {
-    for (size_t j = 0; j < ms; j++) {
-      B[i][j] = thrust::tanh(A[i][j]);
-    }
-  }
-
-  return B;
-}
-
-/*
-
-*/
-inline __device__
-device_matrix_t pow(device_matrix_t A, int exp) {
-  size_t n = A.size();
-  // Assert ns >= 1
-  size_t m = A[0].size();
-
-  device_matrix_t B = device_init(n, m, 0.0);
+  // size_t ms = A.data().get()[0].size();
+  *result = 0.0;
 
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      B[i][j] = thrust::pow(A[i][j], exp);
+      *result += A[i][j];
     }
   }
 
-  return B;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_matrix_t transpose(device_matrix_t A) {
-  size_t n = A.size();
+// __global__
+// double mean(device_matrix_t A) {
+//   size_t ns = A.size();
+//   // Assert ns >= 1
+//   size_t ms = (A.data().get()[0]).size();
+//   double total = sum(A);
+//   double length = (double)(ns * ms);
+//   double result = 0.0;
+
+//   if (length > 0.0) {
+//     result = total / length;
+//   }
+
+//   return result;
+// }
+
+/*
+
+*/
+__global__
+void max(size_t n, size_t m, double** A, double* result) {
+  *result = A[0][0];
+  for (int i = 0; i < n; i++) {
+    for(int j = 0; j < m; j++) {
+      if (A[i][j] > *result) *result = A[i][j];
+    }
+  }
+}
+
+/*
+
+*/
+__global__
+void min(size_t n, size_t m, double** A, double* result) {
+  *result = A[0][0];
+  for (int i = 0; i < n; i++) {
+    for(int j = 0; j < m; j++) {
+      if (A[i][j] < *result) *result = A[i][j];
+    }
+  }
+}
+
+/*
+
+*/
+__global__
+void log(size_t n, size_t m, double** A, double** B) {
+  // size_t ns = A.size();
   // Assert ns >= 1
-  size_t m = A[0].size();
+  // size_t ms = A.data().get()[0].size();
 
-  device_matrix_t B = device_init(m, n, 0.0);
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
 
-  for (size_t i = 0; i < n; i++) {
-    for (size_t j = 0; j < m; j++) {
-      B[j][i] = A[i][j];
-    }
-  }
+  // device_matrix_t B = device_init(ns, ms, 0.0);
 
-  return B;
+  // for (size_t i = 0; i < ns; i++) {
+  //   for (size_t j = 0; j < ms; j++) {
+  B[i][j] = ::log(A[i][j]);
+  //   }
+  // }
+
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_matrix_t multiply(device_matrix_t A, double scalar) {
-  size_t n = A.size();
+__global__
+void exp(size_t n, size_t m, double** A, double** B) {
+  // size_t ns = A.size();
   // Assert ns >= 1
-  size_t m = A[0].size();
+  // size_t ms = A.data().get()[0].size();
 
-  device_matrix_t B = device_init(n, m, 0.0);
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
+  // device_matrix_t B = device_init(ns, ms, 0.0);
 
-  for (size_t i = 0; i < n; i++) {
-    device_vec_t temp_n;
-    for (size_t j = 0; j < m; j++) {
-      B[i][j] = scalar * (A[i][j]);
-    }
-  }
+  // for (size_t i = 0; i < ns; i++) {
+  //   for (size_t j = 0; j < ms; j++) {
+  B[i][j] = ::exp(A[i][j]);
+  //   }
+  // }
 
-  return B;
+  return;
 }
 
 /*
 
 */
-inline __device__
-device_matrix_t divide(device_matrix_t A, double scalar) {
-  size_t n = A.size();
+__global__
+void tanh(size_t n, size_t m, double** A, double** B) {
+  // size_t ns = A.size();
   // Assert ns >= 1
-  size_t m = A[0].size();
+  // size_t ms = A.data().get()[0].size();
 
-  device_matrix_t B = device_init(n, m, 0.0);
+  // device_matrix_t B = device_init(ns, ms, 0.0);
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
+  // for (size_t i = 0; i < ns; i++) {
+  //   for (size_t j = 0; j < ms; j++) {
+  B[i][j] = ::tanh(A[i][j]);
+  //   }
+  // }
 
-  if (scalar == 0.0) {
-    printf("Attempt to divide by zero \n");
-  }
-
-  for (size_t i = 0; i < n; i++) {
-    for (size_t j = 0; j < m; j++) {
-      B[i][j] = A[i][j] / scalar;
-    }
-  }
-
-  return B;
+  return;
 }
 
 /*
 
 */
-inline __device__
+__global__
+void pow(size_t n, size_t m, double** A, int exp, double** B) {
+  // size_t n = A.size();
+  // Assert ns >= 1
+  // size_t m = A.data().get()[0].size();
+
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
+  // device_matrix_t B = device_init(n, m, 0.0);
+
+  // for (size_t i = 0; i < n; i++) {
+  //   for (size_t j = 0; j < m; j++) {
+  B[i][j] = ::pow(A[i][j], exp);
+  //   }
+  // }
+
+  return;
+}
+
+/*
+
+*/
+__global__
+void transpose(size_t n, size_t m, double** A, double** B) {
+  // size_t n = A.size();
+  // Assert ns >= 1
+  // size_t m = A.data().get()[0].size();
+
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
+  // device_matrix_t B = device_init(m, n, 0.0);
+
+  // for (size_t i = 0; i < n; i++) {
+  //   for (size_t j = 0; j < m; j++) {
+  B[j][i] = A[i][j];
+  //   }
+  // }
+
+  return;
+}
+
+/*
+
+*/
+__global__
+void multiply(size_t n, size_t m, double** A, double scalar, double** B) {
+  // size_t n = A.size();
+  // Assert ns >= 1
+  // size_t m = A.data().get()[0].size();
+
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
+
+  // device_matrix_t B = device_init(n, m, 0.0);
+
+  // for (size_t i = 0; i < n; i++) {
+  //   for (size_t j = 0; j < m; j++) {
+  B[i][j] = scalar * (A[i][j]);
+  //   }
+  // }
+
+  return;
+}
+
+/*
+
+*/
+__global__
+void divide(size_t n, size_t m, double** A, double scalar, double** B) {
+  // size_t n = A.size();
+  // Assert ns >= 1
+  // size_t m = A.data().get()[0].size();
+
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n || j >= m) return;
+  // device_matrix_t B = device_init(n, m, 0.0);
+
+  // if (scalar == 0.0) {
+  //   printf("Attempt to divide by zero \n");
+  // }
+
+  // for (size_t i = 0; i < n; i++) {
+  //   for (size_t j = 0; j < m; j++) {
+  B[i][j] = A[i][j] / scalar;
+  //   }
+  // }
+
+  return;
+}
+
+/*
+
+*/
+__host__ 
 device_matrix_t device_init(size_t n, size_t m, double value) {
 
   assert(n > 0 && m > 0);
@@ -1132,7 +1181,7 @@ device_matrix_t device_init(size_t n, size_t m, double value) {
 /*
 
 */
-inline __device__
+__host__ 
 device_matrix_t device_randu(size_t n, size_t m) {
   assert(n > 0 && m > 0);
 
@@ -1150,60 +1199,66 @@ device_matrix_t device_randu(size_t n, size_t m) {
 /*
 
 */
-inline __device__
-device_matrix_t add(device_matrix_t A, device_matrix_t B) {
-  size_t n_A = A.size();
-  size_t m_A = A[0].size();
-  size_t n_B = B.size();
-  size_t m_B = B[0].size();
+__global__
+void add(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double** A, double** B, double** C) {
+  // size_t n_A = A.size();
+  // size_t m_A = A.data().get()[0].size();
+  // size_t n_B = B.size();
+  // size_t m_B = B.data().get()[0].size();
 
-  if (n_A != n_B || m_A != m_B) {
-    printf("Incorrect matrix dimensions for add\n");
-  }
+  // if (n_A != n_B || m_A != m_B) {
+  //   printf("Incorrect matrix dimensions for add\n");
+  // }
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n_A || j >= m_A) return;
+   // = device_init(n_A, m_A, 0.0);
 
-  device_matrix_t C = device_init(n_A, m_A, 0.0);
+  // for (size_t i = 0; i < n_A; i++) {
+  //   for (size_t j = 0; j < m_A; j++) {
+  C[i][j] = A[i][j] + B[i][j];
+  //   }
+  // }
 
-  for (size_t i = 0; i < n_A; i++) {
-    for (size_t j = 0; j < m_A; j++) {
-      C[i][j] = A[i][j] + B[i][j];
-    }
-  }
-
-  return C;
+  return ;
 }
 
 /*
 
 */
-inline __device__
-device_matrix_t subtract(device_matrix_t A, device_matrix_t B) {
-  size_t n_A = A.size();
-  size_t m_A = A[0].size();
-  size_t n_B = B.size();
-  size_t m_B = B[0].size();
+__global__
+void subtract(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double** A, double** B, double** C) {
+  // size_t n_A = A.size();
+  // size_t m_A = A.data().get()[0].size();
+  // size_t n_B = B.size();
+  // size_t m_B = B.data().get()[0].size();
 
-  if (n_A != n_B || m_A != m_B) {
-    printf("Incorrect matrix dimensions for subtract\n");
-  }
+  // if (n_A != n_B || m_A != m_B) {
+  //   printf("Incorrect matrix dimensions for subtract\n");
+  // }
 
-  device_matrix_t C = device_init(n_A, m_A, 0.0);
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n_A || j >= m_A) return;
 
-  for (size_t i = 0; i < n_A; i++) {
-    for (size_t j = 0; j < m_A; j++) {
-      C[i][j] = A[i][j] - B[i][j];
-    }
-  }
+  // device_matrix_t C = device_init(n_A, m_A, 0.0);
 
-  return C;
+  // for (size_t i = 0; i < n_A; i++) {
+  //   for (size_t j = 0; j < m_A; j++) {
+  C[i][j] = A[i][j] - B[i][j];
+  //   }
+  // }
+
+  return;
 }
 
 /*
 
 */
-inline __device__
+__host__ 
 device_matrix_t slice(device_matrix_t A, size_t start, size_t end) {
   size_t rows = end-start;
-  size_t cols = A[0].size();
+  size_t cols = A.data().get()[0].size();
   device_matrix_t B;
   for (size_t i = 0; i < rows; i++) {
     device_vec_t v(A[start+i]);
@@ -1215,21 +1270,21 @@ device_matrix_t slice(device_matrix_t A, size_t start, size_t end) {
 /*
 
 */
-inline __device__
+__host__ 
 device_matrix_t vector_to_matrix(device_vec_t a, size_t n, size_t m) {
   size_t len = a.size();
 
-  if (n * m != len) {
-    printf("Incorrect dimensions for vector reshape \n");
-    exit(0);
-  }
+  // if (n * m != len) {
+    // printf("Incorrect dimensions for vector reshape \n");
+    // exit(0);
+  // }
 
   device_matrix_t A = device_init(n, m, 0.0);
 
   for (size_t k = 0; k < len; k++) {
     size_t i = k / m;
     size_t j = k % m;
-    A[i][j] = a[k];
+    A.data().get()[i][j] = a[k];
   }
 
   return A;
@@ -1239,31 +1294,34 @@ device_matrix_t vector_to_matrix(device_vec_t a, size_t n, size_t m) {
 /*
 
 */
-inline __device__
-device_matrix_t dot(device_matrix_t A, device_matrix_t B) {
-  size_t n_A = A.size();
-  size_t m_A = A[0].size();
-  size_t n_B = B.size();
-  size_t m_B = B[0].size();
+__global__
+void dot(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double** A, double** B, double** C) {
+  // size_t n_A = A.size();
+  // size_t m_A = A.data().get()[0].size();
+  // size_t n_B = B.size();
+  // size_t m_B = B.data().get()[0].size();
 
-  if (m_A != n_B) {
-    printf("Incorrect matrix dimensions for dot product \n");
-    exit(-1);
+  // if (m_A != n_B) {
+  //   printf("Incorrect matrix dimensions for dot product \n");
+  //   exit(-1);
+  // }
+
+  int j = blockIdx.x * blockDim.x + threadIdx.x; 
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  if (i >= n_A || j >= m_B) return;
+
+  // for (size_t i = 0; i < n_A; i++) {
+  //   for (size_t j = 0; j < m_B; j++) {
+  for (size_t k = 0; k < m_A; k++) {
+    C[i][j] += A[i][k] * B[k][j];
   }
+  //   }
+  // }
 
-  device_matrix_t C = device_init(n_A, m_B, 0.0);
-
-  for (size_t i = 0; i < n_A; i++) {
-    for (size_t j = 0; j < m_B; j++) {
-      for (size_t k = 0; k < m_A; k++) {
-        C[i][j] += A[i][k] * B[k][j];
-      }
-    }
-  }
-
-  return C;
+  return;
 }
 
+/*
 inline __device__
 void display(device_matrix_t A) {
   size_t n = A.size();
@@ -1286,6 +1344,6 @@ void display(device_matrix_t A) {
     }
   }
   printf("] \n\n");
-}
+} */
 
 } // namespace matrix
