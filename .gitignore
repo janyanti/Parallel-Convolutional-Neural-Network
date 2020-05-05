@@ -2,4 +2,6 @@
 /logs
 /data
 /src/objs
+/mpi/objs
+/mpi/cnn-*
 cnn

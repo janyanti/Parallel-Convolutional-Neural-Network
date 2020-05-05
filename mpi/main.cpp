@@ -13,13 +13,14 @@
 #include <string>
 
 #include "parse_file.h"
-
+#include "instrument.h"
 
 using namespace matrix;
 using namespace dcnn;
 
 void real_test(char **argv) {
 
+  START_ACTIVITY(ACTIVITY_SETUP);
   /* Initialize variables for file parsing */
   matrix_t train_data;
   matrix_t train_labels;
@@ -53,13 +54,18 @@ void real_test(char **argv) {
   std::vector<layer_type_t> layers = {TANH, TANH, SOFT};
   size_t num_layers = layers.size();
   double learning_rate = 0.001;
-  int num_epochs = 2;
+  int num_epochs = 4;
 
   std::vector<matrix_t> weights;
 
+  FINISH_ACTIVITY(ACTIVITY_SETUP);
+
+  START_ACTIVITY(ACTIVITY_PROP);
   train(X_train, Y_train, numsamples, inputRows, inputCols,
         outputRows, outputCols, unitcounts, layers,
         num_layers, learning_rate, num_epochs, weights);
+
+  FINISH_ACTIVITY(ACTIVITY_PROP);
 
   // test after training
   double correct = 0;
@@ -82,7 +88,13 @@ int main(int argc, char **argv) {
     fprintf(stdout, "Incorrect number of parameters\n");
   }
 
+  /* Enable instrumentation */
+  TRACK_ACTIVITY(true);
+
+  /* Run NN test with command line arguments */
   real_test(argv);
 
+  /* Export instrumenation data */
+  SHOW_ACTIVITY(stderr);
   return 0;
 }
