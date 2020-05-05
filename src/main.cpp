@@ -62,20 +62,20 @@ void nn_test() {
 
   matrix_t x1, y1;
   x1 = init(inputRows + 1, inputCols, 0.0);
-  x1[0][0] = 1.0;
-  x1[1+1][0] = 1.0;
-  x1[2+1][0] = 1.0;
-  x1[3+1][0] = 1.0;
+  x1->data[0][0] = 1.0;
+  x1->data[1+1][0] = 1.0;
+  x1->data[2+1][0] = 1.0;
+  x1->data[3+1][0] = 1.0;
   y1 = init(outputRows, outputCols, 0.0);
-  y1[7][0] = 1.0;
+  y1->data[7][0] = 1.0;
   sample_t s1(x1, y1);
 
   matrix_t x2, y2;
   x2 = init(inputRows + 1, inputCols, 0.0);
-  x2[0][0] = 1.0;
-  x2[3+1][0] = 1.0;
+  x2->data[0][0] = 1.0;
+  x2->data[3+1][0] = 1.0;
   y2 = init(outputRows, outputCols, 0.0);
-  y2[9][0] = 1.0;
+  y2->data[9][0] = 1.0;
   sample_t s2(x2, y2);
 
   std::vector<sample_t> samples = {s1, s2};
@@ -87,40 +87,30 @@ void nn_test() {
 void pfile_test(char **argv) {
   int num_labels = 10;
 
+  matrix_t train_data = pfile::read_images(argv[1]);
+  matrix_t train_labels = pfile::read_labels(argv[2], num_labels);
 
-  matrix_t train_data;
-  matrix_t train_labels;
-
-
-  pfile::read_images(argv[1], train_data);
-  pfile::read_labels(argv[2], num_labels, train_labels);
-
-  display(train_labels[0]);
+  //display(train_labels->data[0]);
 
 }
 
 void real_test(char **argv) {
   // read in the data here
-  matrix_t train_data;
-  matrix_t train_labels;
-  matrix_t test_data;
-  matrix_t test_labels;
-
   int num_labels = 10;
   std::vector<sample_t> train_samples;
   std::vector<sample_t> test_samples;
 
-  pfile::read_images(argv[1], train_data);
-  pfile::read_labels(argv[2], num_labels, train_labels);
+  matrix_t train_data = pfile::read_images(argv[1]);
+  matrix_t train_labels = pfile::read_labels(argv[2], num_labels);
 
-  pfile::read_images(argv[3], test_data);
-  pfile::read_labels(argv[4], num_labels, test_labels);
+  matrix_t test_data = pfile::read_images(argv[3]);
+  matrix_t test_labels = pfile::read_labels(argv[4], num_labels);
 
   train_samples = pfile::create_sample(train_data, train_labels);
   test_samples = pfile::create_sample(test_data, test_labels);
 
   int numsamples = train_samples.size();
-  int inputRows = train_data[0].size();
+  int inputRows = train_data->m;
   int inputCols = 1;
   int outputRows = num_labels;
   int outputCols = 1;
@@ -137,7 +127,7 @@ void real_test(char **argv) {
   for (int i = 0; i < test_samples.size(); i++){
     sample_t s = test_samples[i];
     size_t yh_index = m.predict(s.getX());
-    if (s.getY()[yh_index][0] == 1.0)
+    if (s.getY()->data[yh_index][0] == 1.0)
       correct++;
   }
 

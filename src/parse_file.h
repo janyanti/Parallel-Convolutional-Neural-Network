@@ -15,8 +15,8 @@
 namespace pfile {
 
 int reverse_int(int i);
-void read_images(char *filepath, matrix::matrix_t &arr);
-void read_labels(char *filepath, int num_labels, matrix::matrix_t &arr);
+matrix::matrix_t read_images(char *filepath);
+matrix::matrix_t read_labels(char *filepath, int num_labels);
 std::vector<dcnn::sample_t> create_sample(matrix::matrix_t data, matrix::matrix_t labels);
 
 }; // namespace pfile

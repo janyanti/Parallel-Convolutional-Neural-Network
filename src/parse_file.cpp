@@ -24,7 +24,7 @@ int reverse_int(int i) {
   return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
-void read_images(char *filepath, matrix::matrix_t &arr) {
+matrix::matrix_t read_images(char *filepath) {
   std::ifstream file(filepath, std::ios::binary);
   if (file.is_open()) {
     int magic_number = 0;
@@ -42,14 +42,15 @@ void read_images(char *filepath, matrix::matrix_t &arr) {
     file.read((char *)&n_cols, sizeof(n_cols));
     n_cols = reverse_int(n_cols);
     data_image = n_rows * n_cols;
-    arr.resize(NUM_IMAGES, matrix::vec_t(data_image));
+
+    matrix_t arr = init(NUM_IMAGES, data_image, 0.0);
 
     for (int i = 0; i < NUM_IMAGES; ++i) {
       for (int r = 0; r < n_rows; ++r) {
         for (int c = 0; c < n_cols; ++c) {
           unsigned char temp = 0;
           file.read((char *)&temp, sizeof(temp));
-          arr[i][(n_rows * r) + c] = (double)temp / 255.0;
+          arr->data[i][(n_rows * r) + c] = (double)temp / 255.0;
         }
       }
     }
@@ -66,12 +67,14 @@ void read_labels(char *filepath, int num_labels, matrix::matrix_t &arr) {
     magic_number = reverse_int(magic_number);
     file.read((char *)&num_images, sizeof(num_images));
     num_images = reverse_int(num_images);
-    arr.resize(NUM_IMAGES, matrix::vec_t(num_labels));
+
+
+    matrix_t arr = init(NUM_IMAGES, data_image, 0.0);
 
     for (int i = 0; i < NUM_IMAGES; ++i) {
       unsigned char j = 0;
       file.read((char *)&j, sizeof(j));
-      arr[i][j] = 1.0;
+      arr->data[i][j] = 1.0;
     }
   }
 }
