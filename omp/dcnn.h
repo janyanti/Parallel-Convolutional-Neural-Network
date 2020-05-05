@@ -35,21 +35,21 @@ enum layer_type_t {
              std::vector<matrix_t> &weights);
   size_t predict(std::vector<matrix_t> &weights, matrix_t &x,
                  int num_layers, std::vector<layer_type_t> layer_types);
-  matrix_t linearForward(matrix_t a, matrix_t b);
-  matrix_t linearBackward1(matrix_t a, matrix_t b);
-  matrix_t linearBackward2(matrix_t a, matrix_t b);
-  matrix_t sigmForward(matrix_t v);
-  matrix_t sigmBackward(matrix_t linearComp, matrix_t activationComp,
+  void linearForward(matrix_t dest, matrix_t a, matrix_t b);
+  void linearBackward1(matrix_t dest, matrix_t a, matrix_t b);
+  void linearBackward2(matrix_t dest, matrix_t a, matrix_t b);
+  void sigmForward(matrix_t dest, matrix_t v);
+  void sigmBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
                         matrix_t gradActivation);
-  matrix_t softForward(matrix_t v);
-  matrix_t softBackward(matrix_t y, matrix_t linearComp,
+  void softForward(matrix_t dest, matrix_t v);
+  void softBackward(matrix_t dest, matrix_t y, matrix_t linearComp,
                         matrix_t activationComp, matrix_t gradActivation);
   double crossEntropyForward(matrix_t v, matrix_t vh);
-  matrix_t tanhForward(matrix_t v);
-  matrix_t tanhBackward(matrix_t linearComp, matrix_t activationComp,
+  void tanhForward(matrix_t dest, matrix_t v);
+  void tanhBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
                         matrix_t gradActivation);
-  matrix_t reluForward(matrix_t v);
-  matrix_t reluBackward(matrix_t linearComp, matrix_t activationComp,
+  void reluForward(matrix_t dest, matrix_t v);
+  void reluBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
                         matrix_t gradActivation);
 
 } // namespace dcnn

@@ -558,7 +558,11 @@ matrix_t slice(matrix_t A, size_t start, size_t end) {
   size_t rows = end-start;
   matrix_t B;
   for (size_t i = 0; i < rows; i++) {
-    vec_t v(A[start+i]);
+    vec_t v;
+    size_t cols = A[start+i].size();
+    for (size_t j = 0; j < cols; j++) {
+      v.push_back(A[start+i][j]);
+    }
     B.push_back(v);
   }
   return B;
