@@ -33,9 +33,15 @@ cnn-seq: dirs $(OBJS)
 		$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
 
-cnn-mpi: dirs $(OBJS)
-		$(MPICC) $(CXXFLAGS) $(MPI) -o $@ $(OBJS) $(LDFLAGS)
+cnn-mpi: $(CC_FILES)
+	$(MPICC) $(CXXFLAGS) $(MPI) -o $@ $(CC_FILES) $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cpp
 		$(CXX) $< $(CXXFLAGS) -c -o $@
 
+
+$(OBJDIR_MPI)/%.o: %.cpp
+		$(CXX) $< $(CXXFLAGS) $(MPI) -c -o $@
+
+run-mpi:
+		 mpiexec -np 4 -map-by core -bind-to core ./cnn-mpi ../data/mnist-train-data ../data/mnist-train-labels ../data/mnist-test-data ../data/mnist-test-labels

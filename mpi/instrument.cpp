@@ -20,7 +20,7 @@ using namespace std::chrono;
 using Clock=system_clock;
 //using Time=system_clock;
 
-static char *activity_name[ACTIVITY_COUNT] = {"unknown", "setup", "propogate", "predict", "comm"};
+static char *activity_name[ACTIVITY_COUNT] = {"unknown", "setup", "propogate", "comm", "predict"};
 
 static bool initialized = false;
 

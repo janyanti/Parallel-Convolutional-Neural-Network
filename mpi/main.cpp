@@ -14,11 +14,17 @@
 
 #include "parse_file.h"
 #include "instrument.h"
+#include "comms.h"
 
 using namespace matrix;
 using namespace dcnn;
 
-void real_test(char **argv) {
+void real_test(char **argv, int process_count, int process_id) {
+
+
+
+  bool mpi_master = process_id == 0;
+
 
   START_ACTIVITY(ACTIVITY_SETUP);
   /* Initialize variables for file parsing */
@@ -54,9 +60,11 @@ void real_test(char **argv) {
   std::vector<layer_type_t> layers = {TANH, TANH, SOFT};
   size_t num_layers = layers.size();
   double learning_rate = 0.001;
-  int num_epochs = 4;
+  int num_epochs = 100;
 
   std::vector<matrix_t> weights;
+
+  fprintf(stderr, "Training on machine: %d \n", process_id);
 
   FINISH_ACTIVITY(ACTIVITY_SETUP);
 
@@ -67,7 +75,8 @@ void real_test(char **argv) {
 
   FINISH_ACTIVITY(ACTIVITY_PROP);
 
-  // test after training
+  /* Evaluate model performance */
+  START_ACTIVITY(ACTIVITY_PREDICT);
   double correct = 0;
   for (size_t i = 0; i < X_test.size(); i++){
     matrix_t X = X_test[i];
@@ -80,6 +89,7 @@ void real_test(char **argv) {
   double error_rate = correct / ((double) X_test.size());
   printf("Accuracy: %% %.2f\n", 100. * error_rate);
 
+  FINISH_ACTIVITY(ACTIVITY_PREDICT);
 }
 
 int main(int argc, char **argv) {
@@ -88,13 +98,30 @@ int main(int argc, char **argv) {
     fprintf(stdout, "Incorrect number of parameters\n");
   }
 
+
+  /* Initialize MPI Environment */
+  int process_count = 1;
+  int process_id = 0;
+  int num_processes = 0;
+
+#if MPI
+  MPI_Init(NULL, NULL);
+  process_count = MPI_Comm_size(MPI_COMM_WORLD, &process_count);
+  process_id = MPI_Comm_rank(MPI_COMM_WORLD, &process_id);
+#endif
+
   /* Enable instrumentation */
   TRACK_ACTIVITY(true);
 
   /* Run NN test with command line arguments */
-  real_test(argv);
+  real_test(argv, process_count, process_id);
 
   /* Export instrumenation data */
   SHOW_ACTIVITY(stderr);
+
+#if MPI
+  MPI_Finalize();
+#endif
+
   return 0;
 }
