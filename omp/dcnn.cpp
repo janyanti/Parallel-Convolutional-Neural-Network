@@ -21,121 +21,128 @@ void linearForward(matrix_t dest, matrix_t a, matrix_t b) {
   //printf("B DIMS: (%d, %d) \n", b.size(), b[0].size());
 
   matrix_t res = dot(b, a);
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
-
+  matrix_free(res);
   return;
 }
 
 void linearBackward1(matrix_t dest, matrix_t a, matrix_t b) {
   matrix_t transA = transpose(a);
   matrix_t res = dot(b, transA);
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
+  matrix_free(transA);
 
   return;
 }
 
 void linearBackward2(matrix_t dest, matrix_t a, matrix_t b) {
   matrix_t trA = transpose(a);
-  matrix_t slicedA = slice(trA, 1, trA.size());
+  matrix_t slicedA = slice(trA, 1, trA->n);
   matrix_t res = dot(slicedA, b);
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
+  matrix_free(trA);
+  matrix_free(slicedA);
 
   return;
 }
 
 void sigmForward(matrix_t dest, matrix_t v) {
-  vec_t ones = init(1, 1.);
   matrix_t res;
-  res = multiply(v, -1.);
-  size_t n = v.size();
+  size_t n = v->n;
   // Assert ns >= 1
-  size_t m = v[0].size();
+  size_t m = v->m;
 
   res = init(n, m, 0.0);
 
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      res[i][j] = 1 / (1 + std::exp(-1 * v[i][j]));
+      res->data[i][j] = 1 / (1 + std::exp(-1 * v->data[i][j]));
     }
-  }
-  res.insert(res.begin(), ones);
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  
+  if (dest->n != res->n + 1 || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+  }
+
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row+1][col] = res->data[row][col];
     }
   }
+  dest->data[0][0] = 1.0;
+  matrix_free(res);
 
   return;
 }
 
 void sigmBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
                              matrix_t gradActivation) {
-  size_t n = gradActivation.size();
-  size_t m = gradActivation[0].size();
+  size_t n = gradActivation->n;
+  size_t m = gradActivation->m;
   matrix_t res = init(n, m, 0.0);
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      double temp = activationComp[i + 1][j];
-      res[i][j] = gradActivation[i][j] * temp * (1.0 - temp);
+      double temp = activationComp->data[i + 1][j];
+      res->data[i][j] = gradActivation->data[i][j] * temp * (1.0 - temp);
     }
   }
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
 
   return;
 }
 
 void tanhForward(matrix_t dest, matrix_t v)
 {
-  vec_t ones = init(1, 1.);
   matrix_t res = tanh(v);
-  res.insert(res.begin(), ones);
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row+1][col] = res->data[row][col];
     }
   }
+  dest->data[0][0] = 1.0;
+  matrix_free(res);
 
   return;
 }
@@ -143,54 +150,56 @@ void tanhForward(matrix_t dest, matrix_t v)
 void tanhBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
                              matrix_t gradActivation)
 {
-  size_t n = gradActivation.size();
-  size_t m = gradActivation[0].size();
+  size_t n = gradActivation->n;
+  size_t m = gradActivation->m;
   matrix_t res = init(n, m, 0.0);
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      double temp = activationComp[i + 1][j];
-      res[i][j] = gradActivation[i][j] * (1.0 - temp*temp);
+      double temp = activationComp->data[i + 1][j];
+      res->data[i][j] = gradActivation->data[i][j] * (1.0 - temp*temp);
     }
   }
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
 
   return;
 }
 
 void reluForward(matrix_t dest, matrix_t A)
 {
-  size_t ns = A.size();
+  size_t ns = A->n;
   // Assert ns >= 1
-  size_t ms = A[0].size();
+  size_t ms = A->m;
 
   matrix_t res = init(ns, ms, 0.0);
 
   for (size_t i = 0; i < ns; i++) {
     for (size_t j = 0; j < ms; j++) {
-      res[i][j] = std::max(0.0, A[i][j]);
+      res->data[i][j] = std::max(0.0, A->data[i][j]);
     }
   }
-  vec_t ones = init(1, 1.);
-  res.insert(res.begin(), ones);
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row+1][col] = res->data[row][col];
     }
   }
+  dest->data[0][0] = 1.0;
+  matrix_free(res);
 
   return;
 }
@@ -198,25 +207,26 @@ void reluForward(matrix_t dest, matrix_t A)
 void reluBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp, 
                   matrix_t gradActivation)
 {
-  size_t n = gradActivation.size();
-  size_t m = gradActivation[0].size();
+  size_t n = gradActivation->n;
+  size_t m = gradActivation->m;
   matrix_t res = init(n, m, 0.0);
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < m; j++) {
-      double temp = activationComp[i + 1][j];
-      res[i][j] = temp == 0.0 ? 0 : gradActivation[i][j];
+      double temp = activationComp->data[i + 1][j];
+      res->data[i][j] = temp == 0.0 ? 0 : gradActivation->data[i][j];
     }
   }
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
 
   return;
 }
@@ -226,15 +236,17 @@ void softForward(matrix_t dest, matrix_t v) {
   matrix_t res = divide(exp_prev, sum(exp_prev));
 
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
+  matrix_free(exp_prev);
 
   return;
 }
@@ -243,15 +255,16 @@ void softBackward(matrix_t dest, matrix_t y, matrix_t linearComp,
                              matrix_t activationComp, matrix_t gradActivation) {
   matrix_t res = subtract(activationComp, y);
 
-  if (dest.size() != res.size() || dest[0].size() != res[0].size()){
-    printf("Wrong sizes %d %d %d %d\n", dest.size(), dest[0].size(), res.size(), res[0].size());
+  if (dest->n != res->n || dest->m != res->m){
+    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
-  for (size_t row = 0; row < res.size(); row++) {
-    for (size_t col = 0; col < res[row].size(); col++) {
-      dest[row][col] = res[row][col];
+  for (size_t row = 0; row < res->n; row++) {
+    for (size_t col = 0; col < res->m; col++) {
+      dest->data[row][col] = res->data[row][col];
     }
   }
+  matrix_free(res);
 
   return;
 }
@@ -259,23 +272,22 @@ void softBackward(matrix_t dest, matrix_t y, matrix_t linearComp,
 double crossEntropyForward(matrix_t v, matrix_t vh) {
   matrix_t lvh = log(vh);
   double crossEntropy = 0.0;
-  for (size_t i = 0; i < v.size(); i++) {
-    crossEntropy -= v[i][0] * lvh[i][0];
+  for (size_t i = 0; i < v->n; i++) {
+    crossEntropy -= v->data[i][0] * lvh->data[i][0];
   }
   return crossEntropy;
 }
 
 /* KERNALS HERE */
 
-void single_epoch(std::vector<matrix_t> &X, std::vector<matrix_t> &Y,
-  std::vector<matrix_t> &weights, std::vector<layer_type_t> &layer_types,
-  int num_layers, double learning_rate, std::vector<tensor_t> &linearComp,
-  std::vector<tensor_t> &activationComp, std::vector<tensor_t> &gradLinear,
-  std::vector<tensor_t> &gradActivation, std::vector<tensor_t> &gradWeights) {
+void single_epoch(matrix_t* X, matrix_t* Y, int num_samples, 
+  matrix_t* weights, layer_type_t* layer_types, int num_layers, 
+  double learning_rate, matrix_t** linearComp, matrix_t** activationComp, 
+  matrix_t** gradLinear, matrix_t** gradActivation, matrix_t** gradWeights) {
 
   int s, i, b;
   
-  for (s = 0; s < X.size(); s += BATCH_SIZE) {
+  for (s = 0; s < num_samples; s += BATCH_SIZE) {
     // #pragma omp parallel 
     // {
     //   #pragma omp for schedule(static)
@@ -350,12 +362,13 @@ void single_epoch(std::vector<matrix_t> &X, std::vector<matrix_t> &Y,
           matrix_t scaMult = multiply(gradWeights[b][i], learning_rate);
           matrix_t diff = subtract(weights[i], scaMult);
           // update the weights vector manually
-          for (size_t row = 0; row < diff.size(); row++) {
-            for (size_t col = 0; col < diff[row].size(); col++) {
-              weights[i][row][col] = diff[row][col];
+          for (size_t row = 0; row < diff->n; row++) {
+            for (size_t col = 0; col < diff->m; col++) {
+              weights[i]->data[row][col] = diff->data[row][col];
             }
           }
-              
+          matrix_free(scaMult);
+          matrix_free(diff);        
         }
       }
     // } // end pragma omp parallel
@@ -369,15 +382,15 @@ void single_epoch(std::vector<matrix_t> &X, std::vector<matrix_t> &Y,
 
 
 
-void train(std::vector<matrix_t> &X, std::vector<matrix_t> &Y, int num_samples,
+matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
            int input_rows, int input_cols, int output_rows, int output_cols,
-           std::vector<int> num_units,
-           std::vector<layer_type_t> layer_types,
-           int num_layers, double learning_rate, int num_epochs,
-           std::vector<matrix_t> &weights)
+           int* num_units, layer_type_t* layer_types, int num_layers, 
+           double learning_rate, int num_epochs)
 {
   // iterators
   int e, s, i, b;
+
+  matrix_t* weights = (matrix_t *)calloc(sizeof(matrix_t), num_layers);
 
   // alloc weights
   int rows, cols;
@@ -395,59 +408,55 @@ void train(std::vector<matrix_t> &X, std::vector<matrix_t> &Y, int num_samples,
       cols = num_units[i - 1] + 1;
     }
 
-    weights.push_back(randu(rows, cols));
+    weights[i] = randu(rows, cols);
   }
 
   // temp calculations
-  std::vector<tensor_t> linearComp;
-  std::vector<tensor_t> activationComp;
-  std::vector<tensor_t> gradLinear;
-  std::vector<tensor_t> gradActivation;
-  std::vector<tensor_t> gradWeights;
+  matrix_t** linearComp = (matrix_t**)calloc(sizeof(matrix_t*), BATCH_SIZE);
+  matrix_t** activationComp = (matrix_t**)calloc(sizeof(matrix_t*), BATCH_SIZE);
+  matrix_t** gradLinear = (matrix_t**)calloc(sizeof(matrix_t*), BATCH_SIZE);
+  matrix_t** gradActivation = (matrix_t**)calloc(sizeof(matrix_t*), BATCH_SIZE);
+  matrix_t** gradWeights = (matrix_t**)calloc(sizeof(matrix_t*), BATCH_SIZE);
   for (b = 0; b < BATCH_SIZE; b++) {
-    tensor_t temp1;
-    tensor_t temp2;
-    tensor_t temp3;
-    tensor_t temp4;
-    tensor_t temp5;
+    linearComp[b] = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+    activationComp[b] = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+    gradLinear[b] = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+    gradActivation[b] = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+    gradWeights[b] = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
     for (i = 0; i < num_layers; i++) {
-      temp1.push_back(init(num_units[i], 1, 0.0));
-      temp3.push_back(init(num_units[i], 1, 0.0));
+      linearComp[b][i] = init(num_units[i], 1, 0.0);
+      gradLinear[b][i] = init(num_units[i], 1, 0.0);
       if (i == 0){
-        temp2.push_back(init(num_units[i] + 1, 1, 0.0));
-        temp4.push_back(init(num_units[i], 1, 0.0));
-        temp5.push_back(init(num_units[i], input_rows, 0.0));
+        activationComp[b][i] = init(num_units[i] + 1, 1, 0.0);
+        gradActivation[b][i] = init(num_units[i], 1, 0.0);
+        gradWeights[b][i] = init(num_units[i], input_rows, 0.0);
       } else if (i == num_layers - 1) {
-        temp2.push_back(init(num_units[i], 1, 0.0));
-        temp4.push_back(init(num_units[i], 1, 0.0));
-        temp5.push_back(init(output_rows, num_units[i - 1] + 1, 0.0));
+        activationComp[b][i] = init(num_units[i], 1, 0.0);
+        gradActivation[b][i] = init(num_units[i], 1, 0.0);
+        gradWeights[b][i] = init(output_rows, num_units[i - 1] + 1, 0.0);
       } else {
-        temp2.push_back(init(num_units[i] + 1, 1, 0.0));
-        temp4.push_back(init(num_units[i], 1, 0.0));
-        temp5.push_back(init(num_units[i], num_units[i - 1] + 1, 0.0));
+        activationComp[b][i] = init(num_units[i] + 1, 1, 0.0);
+        gradActivation[b][i] = init(num_units[i], 1, 0.0);
+        gradWeights[b][i] = init(num_units[i], num_units[i - 1] + 1, 0.0);
       }
     }
-    linearComp.push_back(temp1);
-    activationComp.push_back(temp2);
-    gradLinear.push_back(temp3);
-    gradActivation.push_back(temp4);
-    gradWeights.push_back(temp5);
   }
 
 
   for (e = 0; e < num_epochs; e++) {
-    single_epoch(X, Y, weights, layer_types, num_layers, learning_rate,
+    single_epoch(X, Y, num_samples, weights, layer_types, num_layers, learning_rate,
       linearComp, activationComp, gradLinear, gradActivation, gradWeights);
 
     printf("epoch = %d avgEntropy = %f\n", e, 0.0);
   }
 
+  return weights;
 
 }
 
 
-size_t predict(std::vector<matrix_t> &weights, matrix_t &x,
-               int num_layers, std::vector<layer_type_t> layer_types) {
+size_t predict(matrix_t* weights, matrix_t x,
+               int num_layers, layer_type_t* layer_types) {
   /*
   // forward computation
   int i;

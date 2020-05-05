@@ -28,13 +28,12 @@ enum layer_type_t {
 };
 
 
-  void train(std::vector<matrix_t> &X, std::vector<matrix_t> &Y, int num_samples,
-             int input_rows, int input_cols, int output_rows, int output_cols,
-             std::vector<int> num_units, std::vector<layer_type_t> layer_types,
-             int num_layers, double learning_rate, int num_epochs,
-             std::vector<matrix_t> &weights);
-  size_t predict(std::vector<matrix_t> &weights, matrix_t &x,
-                 int num_layers, std::vector<layer_type_t> layer_types);
+  matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
+           int input_rows, int input_cols, int output_rows, int output_cols,
+           int* num_units, layer_type_t* layer_types, int num_layers, 
+           double learning_rate, int num_epochs);
+  size_t predict(matrix_t* weights, matrix_t x,
+               int num_layers, layer_type_t* layer_types);
   void linearForward(matrix_t dest, matrix_t a, matrix_t b);
   void linearBackward1(matrix_t dest, matrix_t a, matrix_t b);
   void linearBackward2(matrix_t dest, matrix_t a, matrix_t b);

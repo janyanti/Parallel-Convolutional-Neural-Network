@@ -27,10 +27,10 @@ void real_test(char **argv) {
   matrix_t test_labels;
 
   int num_labels = 10;
-  std::vector<matrix_t> X_train;
-  std::vector<matrix_t> Y_train;
-  std::vector<matrix_t> X_test;
-  std::vector<matrix_t> Y_test;
+  matrix_t* X_train;
+  matrix_t* Y_train;
+  matrix_t* X_test;
+  matrix_t* Y_test;
 
   pfile::read_images(argv[1], train_data);
   pfile::read_labels(argv[2], num_labels, train_labels);
