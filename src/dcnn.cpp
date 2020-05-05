@@ -138,8 +138,9 @@ void model_t::train(std::vector<sample_t> samples, int num_samples, int input_ro
        // update all the weights
        for (i = 0; i < num_layers; i++) {
          deltaWeights[i] = divide(deltaWeights[i], BATCH_SIZE);
+         matrix_t scaledGrad = multiply(deltaWeights[i], learning_rate);
          weights[i] =
-             subtract(weights[i], multiply(deltaWeights[i], learning_rate));
+             subtract(weights[i], scaledGrad);
          clear(deltaWeights[i]);
        }
     }
@@ -230,7 +231,8 @@ matrix_t model_t::linearForward(matrix_t a, matrix_t b) {
 }
 
 matrix_t model_t::linearBackward1(matrix_t a, matrix_t b) {
-  return dot(b, transpose(a));
+  matrix_t trA = transpose(a);
+  return dot(b, trA);
 }
 
 matrix_t model_t::linearBackward2(matrix_t a, matrix_t b) {
@@ -332,7 +334,8 @@ matrix_t model_t::reluBackward(matrix_t linearComp, matrix_t activationComp,
 
 matrix_t model_t::softForward(matrix_t v) {
   matrix_t exp_prev = exp(v);
-  return divide(exp_prev, sum(exp_prev));
+  double total = sum(exp_prev);
+  return divide(exp_prev, total);
 }
 
 matrix_t model_t::softBackward(matrix_t y, matrix_t linearComp,

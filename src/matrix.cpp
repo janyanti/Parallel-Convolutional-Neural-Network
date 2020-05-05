@@ -21,7 +21,7 @@ std::uniform_real_distribution<> rand_dist(-1, 1);
 /*
 
 */
-double sum(vec_t a) {
+double sum(vec_t &a) {
   double result = 0.0;
   size_t n = a.size();
 
@@ -35,7 +35,7 @@ double sum(vec_t a) {
 /*
 
 */
-double mean(vec_t a) {
+double mean(vec_t &a) {
   double total = sum(a);
   double length = (double)a.size();
   double result = 0.0;
@@ -50,17 +50,17 @@ double mean(vec_t a) {
 /*
 
 */
-double max(vec_t a) { return *std::max_element(a.begin(), a.end()); }
+double max(vec_t &a) { return *std::max_element(a.begin(), a.end()); }
 
 /*
 
 */
-double min(vec_t a) { return *std::min_element(a.begin(), a.end()); }
+double min(vec_t &a) { return *std::min_element(a.begin(), a.end()); }
 
 /*
 
 */
-vec_t log(vec_t a) {
+vec_t log(vec_t &a) {
   vec_t result;
   size_t n = a.size();
 
@@ -71,10 +71,22 @@ vec_t log(vec_t a) {
   return result;
 }
 
+
+void log(vec_t &src, vec_t &dest) {
+  size_t n_src = src.size();
+  size_t n_dest = dest.size();
+  assert(n_src == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i]  = std::log(src[i]);
+  }
+
+}
+
 /*
 
 */
-vec_t exp(vec_t a) {
+vec_t exp(vec_t &a) {
   vec_t result;
   size_t n = a.size();
 
@@ -85,10 +97,22 @@ vec_t exp(vec_t a) {
   return result;
 }
 
+
+void exp(vec_t &src, vec_t &dest) {
+  size_t n_src = src.size();
+  size_t n_dest = dest.size();
+  assert(n_src == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i]  = std::exp(src[i]);
+  }
+
+}
+
 /*
 
 */
-vec_t tanh(vec_t a) {
+vec_t tanh(vec_t &a) {
   vec_t result;
   size_t n = a.size();
 
@@ -99,10 +123,22 @@ vec_t tanh(vec_t a) {
   return result;
 }
 
+
+void tanh(vec_t &src, vec_t &dest) {
+  size_t n_src = src.size();
+  size_t n_dest = dest.size();
+  assert(n_src == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i]  = std::tanh(src[i]);
+  }
+
+}
+
 /*
 
 */
-vec_t pow(vec_t a, int exp) {
+vec_t pow(vec_t &a, int exp) {
   size_t n = a.size();
 
   vec_t b;
@@ -114,10 +150,22 @@ vec_t pow(vec_t a, int exp) {
   return b;
 }
 
+
+void pow(vec_t &src, vec_t &dest, int exp) {
+  size_t n_src = src.size();
+  size_t n_dest = dest.size();
+  assert(n_src == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i]  = std::pow(src[i], exp);
+  }
+
+}
+
 /*
 
 */
-vec_t multiply(vec_t a, double scalar) {
+vec_t multiply(vec_t &a, double scalar) {
   vec_t result;
   size_t n = a.size();
 
@@ -128,10 +176,22 @@ vec_t multiply(vec_t a, double scalar) {
   return result;
 }
 
+
+void multiply(vec_t &src, vec_t &dest, double scalar) {
+  size_t n_src = src.size();
+  size_t n_dest = dest.size();
+  assert(n_src == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i]  = scalar * src[i];
+  }
+
+}
+
 /*
 
 */
-vec_t divide(vec_t a, double scalar) {
+vec_t divide(vec_t &a, double scalar) {
   vec_t result;
   size_t n = a.size();
 
@@ -146,10 +206,26 @@ vec_t divide(vec_t a, double scalar) {
   return result;
 }
 
+
+void divide(vec_t &src, vec_t &dest, double scalar) {
+  size_t n_src = src.size();
+  size_t n_dest = dest.size();
+  assert(n_src == n_dest);
+
+  if (scalar == 0.0) {
+    printf("Attempt to divide by zero \n");
+  }
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i]  = src[i] / scalar;
+  }
+
+}
+
 /*
 
 */
-double dot(vec_t a, vec_t b) {
+double dot(vec_t &a, vec_t &b) {
   size_t n = a.size();
   size_t m = b.size();
 
@@ -167,10 +243,12 @@ double dot(vec_t a, vec_t b) {
   return result;
 }
 
+
+
 /*
 
 */
-vec_t add(vec_t a, vec_t b) {
+vec_t add(vec_t &a, vec_t &b) {
   size_t n = a.size();
   size_t m = b.size();
 
@@ -188,10 +266,23 @@ vec_t add(vec_t a, vec_t b) {
   return c;
 }
 
+void add(vec_t &srcA, vec_t &srcB, vec_t &dest) {
+  size_t n_srcA = srcA.size();
+  size_t n_srcB = srcB.size();
+  size_t n_dest = dest.size();
+
+  assert(n_srcA == n_srcB);
+  assert(n_srcA == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i] = srcA[i] + srcB[i];
+  }
+}
+
 /*
 
 */
-vec_t subtract(vec_t a, vec_t b) {
+vec_t subtract(vec_t &a, vec_t &b) {
   size_t n = a.size();
   size_t m = b.size();
 
@@ -207,6 +298,20 @@ vec_t subtract(vec_t a, vec_t b) {
   }
 
   return c;
+}
+
+
+void subtract(vec_t &srcA, vec_t &srcB, vec_t &dest) {
+  size_t n_srcA = srcA.size();
+  size_t n_srcB = srcB.size();
+  size_t n_dest = dest.size();
+
+  assert(n_srcA == n_srcB);
+  assert(n_srcA == n_dest);
+
+  for (size_t i = 0; i < n_dest; i++) {
+    dest[i] = srcA[i] - srcB[i];
+  }
 }
 
 /*
@@ -233,7 +338,7 @@ vec_t randu(size_t n) {
   return a;
 }
 
-void display(vec_t a) {
+void display(vec_t &a) {
   size_t n = a.size();
 
   printf("[ ");
@@ -253,7 +358,7 @@ void clear(vec_t &a) {
 /*
 
 */
-double sum(matrix_t A) {
+double sum(matrix_t &A) {
   size_t ns = A.size();
   // Assert ns >= 1
   size_t ms = A[0].size();
@@ -271,7 +376,7 @@ double sum(matrix_t A) {
 /*
 
 */
-double mean(matrix_t A) {
+double mean(matrix_t &A) {
   size_t ns = A.size();
   // Assert ns >= 1
   size_t ms = A[0].size();
@@ -289,7 +394,7 @@ double mean(matrix_t A) {
 /*
 
 */
-double max(matrix_t A) {
+double max(matrix_t &A) {
   size_t n = A.size();
   double max, curr_val;
   max = std::numeric_limits<double>::min();
@@ -307,7 +412,7 @@ double max(matrix_t A) {
 /*
 
 */
-double min(matrix_t A) {
+double min(matrix_t &A) {
   size_t n = A.size();
   double min, curr_val;
   min = std::numeric_limits<double>::max();
@@ -325,7 +430,7 @@ double min(matrix_t A) {
 /*
 
 */
-matrix_t log(matrix_t A) {
+matrix_t log(matrix_t &A) {
   size_t ns = A.size();
   // Assert ns >= 1
   size_t ms = A[0].size();
@@ -343,10 +448,24 @@ matrix_t log(matrix_t A) {
   return B;
 }
 
+void log(matrix_t &src, matrix_t &dest) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == n_dest) && (m_src == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = std::log(src[i][j]);
+    }
+  }
+}
+
 /*
 
 */
-matrix_t exp(matrix_t A) {
+matrix_t exp(matrix_t &A) {
   size_t ns = A.size();
   // Assert ns >= 1
   size_t ms = A[0].size();
@@ -364,10 +483,25 @@ matrix_t exp(matrix_t A) {
   return B;
 }
 
+
+void exp(matrix_t &src, matrix_t &dest) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == n_dest) && (m_src == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = std::exp(src[i][j]);
+    }
+  }
+}
+
 /*
 
 */
-matrix_t tanh(matrix_t A) {
+matrix_t tanh(matrix_t &A) {
   size_t ns = A.size();
   // Assert ns >= 1
   size_t ms = A[0].size();
@@ -383,10 +517,25 @@ matrix_t tanh(matrix_t A) {
   return B;
 }
 
+
+void tanh(matrix_t &src, matrix_t &dest) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == n_dest) && (m_src == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = std::tanh(src[i][j]);
+    }
+  }
+}
+
 /*
 
 */
-matrix_t pow(matrix_t A, int exp) {
+matrix_t pow(matrix_t &A, int exp) {
   size_t n = A.size();
   // Assert ns >= 1
   size_t m = A[0].size();
@@ -402,10 +551,25 @@ matrix_t pow(matrix_t A, int exp) {
   return B;
 }
 
+
+void pow(matrix_t &src, matrix_t &dest, int exp) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == n_dest) && (m_src == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = std::pow(src[i][j], exp);
+    }
+  }
+}
+
 /*
 
 */
-matrix_t transpose(matrix_t A) {
+matrix_t transpose(matrix_t &A) {
   size_t n = A.size();
   // Assert ns >= 1
   size_t m = A[0].size();
@@ -421,10 +585,25 @@ matrix_t transpose(matrix_t A) {
   return B;
 }
 
+
+void transpose(matrix_t &src, matrix_t &dest) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == m_dest) && (m_src == n_dest));
+
+  for (size_t i = 0; i < m_dest; i++) {
+    for (size_t j = 0; j < n_dest; j++) {
+      dest[j][i] = src[i][j];
+    }
+  }
+}
+
 /*
 
 */
-matrix_t multiply(matrix_t A, double scalar) {
+matrix_t multiply(matrix_t &A, double scalar) {
   size_t n = A.size();
   // Assert ns >= 1
   size_t m = A[0].size();
@@ -441,10 +620,24 @@ matrix_t multiply(matrix_t A, double scalar) {
   return B;
 }
 
+
+void multiply(matrix_t &src, matrix_t &dest, double scalar) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == n_dest) && (m_src == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = scalar * src[i][j];
+    }
+  }
+}
 /*
 
 */
-matrix_t divide(matrix_t A, double scalar) {
+matrix_t divide(matrix_t &A, double scalar) {
   size_t n = A.size();
   // Assert ns >= 1
   size_t m = A[0].size();
@@ -462,6 +655,25 @@ matrix_t divide(matrix_t A, double scalar) {
   }
 
   return B;
+}
+
+
+void divide(matrix_t &src, matrix_t &dest, double scalar) {
+  size_t n_src = src.size();
+  size_t m_src = src[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_src == n_dest) && (m_src == m_dest));
+
+  if (scalar == 0.0) {
+    printf("Attempt to divide by zero \n");
+  }
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = src[i][j] / scalar;
+    }
+  }
 }
 
 /*
@@ -504,7 +716,7 @@ matrix_t randu(size_t n, size_t m) {
 /*
 
 */
-matrix_t add(matrix_t A, matrix_t B) {
+matrix_t add(matrix_t &A, matrix_t &B) {
   size_t n_A = A.size();
   size_t m_A = A[0].size();
   size_t n_B = B.size();
@@ -525,10 +737,28 @@ matrix_t add(matrix_t A, matrix_t B) {
   return C;
 }
 
+
+void add(matrix_t &srcA, matrix_t &srcB, matrix_t &dest) {
+  size_t n_srcA = srcA.size();
+  size_t m_srcA = srcA[0].size();
+  size_t n_srcB = srcB.size();
+  size_t m_srcB = srcB[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_srcA == n_srcB) && (m_srcA == m_srcB));
+  assert((n_srcA == n_dest) && (m_srcA == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = srcA[i][j] + srcB[i][j];
+    }
+  }
+}
+
 /*
 
 */
-matrix_t subtract(matrix_t A, matrix_t B) {
+matrix_t subtract(matrix_t &A, matrix_t &B) {
   size_t n_A = A.size();
   size_t m_A = A[0].size();
   size_t n_B = B.size();
@@ -549,10 +779,28 @@ matrix_t subtract(matrix_t A, matrix_t B) {
   return C;
 }
 
+
+void subtract(matrix_t &srcA, matrix_t &srcB, matrix_t &dest) {
+  size_t n_srcA = srcA.size();
+  size_t m_srcA = srcA[0].size();
+  size_t n_srcB = srcB.size();
+  size_t m_srcB = srcB[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert((n_srcA == n_srcB) && (m_srcA == m_srcB));
+  assert((n_srcA == n_dest) && (m_srcA == m_dest));
+
+  for (size_t i = 0; i < n_dest; i++) {
+    for (size_t j = 0; j < m_dest; j++) {
+      dest[i][j] = srcA[i][j] - srcB[i][j];
+    }
+  }
+}
+
 /*
 
 */
-matrix_t slice(matrix_t A, size_t start, size_t end) {
+matrix_t slice(matrix_t &A, size_t start, size_t end) {
   size_t rows = end-start;
   size_t cols = A[0].size();
   matrix_t B;
@@ -566,7 +814,7 @@ matrix_t slice(matrix_t A, size_t start, size_t end) {
 /*
 
 */
-matrix_t vector_to_matrix(vec_t a, size_t n, size_t m) {
+matrix_t vector_to_matrix(vec_t &a, size_t n, size_t m) {
   size_t len = a.size();
 
   if (n * m != len) {
@@ -589,7 +837,7 @@ matrix_t vector_to_matrix(vec_t a, size_t n, size_t m) {
 /*
 
 */
-matrix_t dot(matrix_t A, matrix_t B) {
+matrix_t dot(matrix_t &A, matrix_t &B) {
   size_t n_A = A.size();
   size_t m_A = A[0].size();
   size_t n_B = B.size();
@@ -613,7 +861,27 @@ matrix_t dot(matrix_t A, matrix_t B) {
   return C;
 }
 
-void display(matrix_t A) {
+
+void dot(matrix_t &srcA, matrix_t &srcB, matrix_t &dest) {
+  size_t n_srcA = srcA.size();
+  size_t m_srcA = srcA[0].size();
+  size_t n_srcB = srcB.size();
+  size_t m_srcB = srcB[0].size();
+  size_t n_dest = dest.size();
+  size_t m_dest = dest[0].size();
+  assert(m_srcA == n_srcB);
+  assert((n_srcA == n_dest) && (m_srcB == m_dest));
+
+  for (size_t i = 0; i < n_srcA; i++) {
+    for (size_t j = 0; j < m_srcB; j++) {
+      for (size_t k = 0; k < m_srcA; k++) {
+        dest[i][j] += srcA[i][k] + srcB[k][j];
+      }
+    }
+  }
+}
+
+void display(matrix_t &A) {
   size_t n = A.size();
   size_t m = A[0].size();
 

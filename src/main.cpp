@@ -36,14 +36,19 @@ void matrix_test() {
   display(A2);
   display(A3);
 
-  display(dot(A2, A3));
-  display(dot(A3, A2));
+  matrix_t dA2A3 = dot(A2, A3);
+  matrix_t dA3A2 = dot(A3, A2);
+  display(dA2A3);
+  display(dA3A2);
 
   matrix_t B1 = vector_to_matrix(a, 5,8);
   matrix_t B2 = vector_to_matrix(a, 8,5);
 
-  display(dot(B2, B1));
-  display(dot(B1, B2));
+  matrix_t dB1B2 = dot(B1, B2);
+  matrix_t dB2B1 = dot(B2, B1);
+
+  display(dB1B2);
+  display(dB2B1);
 
 }
 
