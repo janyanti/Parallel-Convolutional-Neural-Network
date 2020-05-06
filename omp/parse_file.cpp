@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 
-#define NUM_IMAGES 16384
+#define NUM_IMAGES 1
 
 namespace pfile {
 
@@ -24,8 +24,9 @@ int reverse_int(int i) {
   return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
-void read_images(char *filepath, matrix::matrix_t &arr) {
+matrix::matrix_t read_images(char *filepath) {
   std::ifstream file(filepath, std::ios::binary);
+
   if (file.is_open()) {
     int magic_number = 0;
     int num_images = 0;
@@ -42,21 +43,26 @@ void read_images(char *filepath, matrix::matrix_t &arr) {
     file.read((char *)&n_cols, sizeof(n_cols));
     n_cols = reverse_int(n_cols);
     data_image = n_rows * n_cols;
-    arr.resize(NUM_IMAGES, matrix::vec_t(data_image));
+
+    matrix_t arr = init(NUM_IMAGES, data_image, 0.0);
 
     for (int i = 0; i < NUM_IMAGES; ++i) {
       for (int r = 0; r < n_rows; ++r) {
         for (int c = 0; c < n_cols; ++c) {
           unsigned char temp = 0;
           file.read((char *)&temp, sizeof(temp));
-          arr[i][(n_rows * r) + c] = (double)temp / 255.0;
+          arr->data[i][(n_rows * r) + c] = (double)temp / 255.0;
         }
       }
     }
+    return arr;
   }
+
+  /* Error opening file */
+  return NULL;
 }
 
-void read_labels(char *filepath, int num_labels, matrix::matrix_t &arr) {
+matrix::matrix_t read_labels(char *filepath, int num_labels) {
 
   std::ifstream file(filepath, std::ios::binary);
   if (file.is_open()) {
@@ -66,39 +72,49 @@ void read_labels(char *filepath, int num_labels, matrix::matrix_t &arr) {
     magic_number = reverse_int(magic_number);
     file.read((char *)&num_images, sizeof(num_images));
     num_images = reverse_int(num_images);
-    arr.resize(NUM_IMAGES, matrix::vec_t(num_labels));
+
+
+    matrix_t arr = init(NUM_IMAGES, num_labels, 0.0);
 
     for (int i = 0; i < NUM_IMAGES; ++i) {
       unsigned char j = 0;
       file.read((char *)&j, sizeof(j));
-      arr[i][j] = 1.0;
+      arr->data[i][j] = 1.0;
     }
+
+    return arr;
   }
+
+  /* Error opening file */
+  return NULL;
+
 }
 
 void create_sample(matrix::matrix_t data, matrix::matrix_t labels,
-                   std::vector<matrix_t> &X, std::vector<matrix_t> &Y) {
-  size_t n = data.size();
-  size_t m = labels.size();
+                   matrix::matrix_t *X, matrix::matrix_t *Y) {
 
-  size_t num_data = data[0].size();
-  size_t num_labels = labels[0].size();
+  size_t n = data->n;
+  size_t m = labels->n;
 
+  size_t num_data = data->m;
+  size_t num_labels = labels->m;
 
   if (n != m) {
     printf("Data for training and labels don't match \n");
   }
 
   for (size_t i = 0; i < n; i++) {
-    matrix::vec_t ones = init(1, 1.);
-    matrix::matrix_t data_matrix =
-        matrix::vector_to_matrix(data[i], num_data, 1);
-    data_matrix.insert(data_matrix.begin(), ones);
-    matrix::matrix_t label_matrix =
-        matrix::vector_to_matrix(labels[i], num_labels, 1);
+    size_t j;
+    matrix::matrix_t data_matrix = init(num_data + 1, 1, 1.0);
+    for (j = 0; j < num_data; j++)
+      data_matrix->data[j+1][0] = data->data[i][j];
 
-    X.push_back(data_matrix);
-    Y.push_back(label_matrix);
+    matrix::matrix_t label_matrix = init(num_labels, 1, 1.0);
+    for (j = 0; j < num_labels; j++)
+      label_matrix->data[j][0] = labels->data[i][j];
+
+    X[i] = data_matrix;
+    Y[i] = label_matrix;
   }
 
 }

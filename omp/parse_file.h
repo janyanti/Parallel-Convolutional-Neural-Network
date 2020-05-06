@@ -15,10 +15,10 @@
 namespace pfile {
 
 int reverse_int(int i);
-void read_images(char *filepath, matrix::matrix_t &arr);
-void read_labels(char *filepath, int num_labels, matrix::matrix_t &arr);
+matrix::matrix_t read_images(char *filepath);
+matrix::matrix_t read_labels(char *filepath, int num_labels);
 void create_sample(matrix::matrix_t data, matrix::matrix_t labels,
-                   std::vector<matrix::matrix_t> &X,
-                   std::vector<matrix::matrix_t> &Y);
+                   matrix::matrix_t *X,
+                   matrix::matrix_t *Y);
 
 }; // namespace pfile

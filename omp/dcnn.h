@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <omp.h>
 
 #include "matrix.h"
 
@@ -30,7 +31,7 @@ enum layer_type_t {
 
   matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
            int input_rows, int input_cols, int output_rows, int output_cols,
-           int* num_units, layer_type_t* layer_types, int num_layers, 
+           int* num_units, layer_type_t* layer_types, int num_layers,
            double learning_rate, int num_epochs);
   size_t predict(matrix_t* weights, matrix_t x,
                int num_layers, layer_type_t* layer_types);

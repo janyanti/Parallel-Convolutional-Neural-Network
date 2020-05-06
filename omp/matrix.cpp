@@ -618,7 +618,7 @@ matrix_t slice(matrix_t A, size_t start, size_t end) {
   matrix_t B = init(rows, cols, 0.0);
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
-      B->data[start+i][j] = A->data[start+i][j];
+      B->data[i][j] = A->data[start+i][j];
     }
   }
   return B;

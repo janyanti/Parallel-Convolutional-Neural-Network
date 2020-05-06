@@ -10,7 +10,7 @@ all: $(EXECUTABLE)
 
 OBJDIR=objs
 CXX=g++ -m64
-CXXFLAGS=-O3 -g -std=c++1y -fopenmp -DOMP
+CXXFLAGS=-Og -g -std=c++1y -fopenmp -DOMP
 
 LDLIBS  := $(addprefix -l, $(LIBS))
 LDFRAMEWORKS := $(addprefix -framework , $(FRAMEWORKS))

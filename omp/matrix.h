@@ -6,6 +6,8 @@
   Simple Linear Algerbra Libraray for Machine
   TODO: Description of library functions
 */
+#pragma once
+
 #include <algorithm>
 #include <assert.h>
 #include <stdio.h>

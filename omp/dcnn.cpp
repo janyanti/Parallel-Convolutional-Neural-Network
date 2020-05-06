@@ -22,7 +22,7 @@ void linearForward(matrix_t dest, matrix_t a, matrix_t b) {
 
   matrix_t res = dot(b, a);
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("linearForward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -38,7 +38,7 @@ void linearBackward1(matrix_t dest, matrix_t a, matrix_t b) {
   matrix_t transA = transpose(a);
   matrix_t res = dot(b, transA);
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("linearBackward1 Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -57,7 +57,7 @@ void linearBackward2(matrix_t dest, matrix_t a, matrix_t b) {
   matrix_t slicedA = slice(trA, 1, trA->n);
   matrix_t res = dot(slicedA, b);
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("linearBackward2 Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -86,9 +86,9 @@ void sigmForward(matrix_t dest, matrix_t v) {
     }
   }
 
-  
+
   if (dest->n != res->n + 1 || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("sigmForward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -115,7 +115,7 @@ void sigmBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
   }
 
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("sigmBackward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -132,8 +132,8 @@ void tanhForward(matrix_t dest, matrix_t v)
 {
   matrix_t res = tanh(v);
 
-  if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+  if (dest->n != res->n+1 || dest->m != res->m){
+    printf("tanhForward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -161,7 +161,7 @@ void tanhBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
   }
 
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("tanhBackward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -189,8 +189,8 @@ void reluForward(matrix_t dest, matrix_t A)
   }
 
 
-  if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+  if (dest->n != res->n+1 || dest->m != res->m){
+    printf("reluForward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -204,7 +204,7 @@ void reluForward(matrix_t dest, matrix_t A)
   return;
 }
 
-void reluBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp, 
+void reluBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
                   matrix_t gradActivation)
 {
   size_t n = gradActivation->n;
@@ -218,7 +218,7 @@ void reluBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
   }
 
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("reluBackward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -237,7 +237,7 @@ void softForward(matrix_t dest, matrix_t v) {
 
 
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("softForward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -256,7 +256,7 @@ void softBackward(matrix_t dest, matrix_t y, matrix_t linearComp,
   matrix_t res = subtract(activationComp, y);
 
   if (dest->n != res->n || dest->m != res->m){
-    printf("Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
+    printf("softBackward Wrong sizes %d %d %d %d\n", dest->n, dest->m, res->n, res->m);
   }
 
   for (size_t row = 0; row < res->n; row++) {
@@ -280,18 +280,20 @@ double crossEntropyForward(matrix_t v, matrix_t vh) {
 
 /* KERNALS HERE */
 
-void single_epoch(matrix_t* X, matrix_t* Y, int num_samples, 
-  matrix_t* weights, layer_type_t* layer_types, int num_layers, 
-  double learning_rate, matrix_t** linearComp, matrix_t** activationComp, 
+void single_epoch(matrix_t* X, matrix_t* Y, int num_samples,
+  matrix_t* weights, layer_type_t* layer_types, int num_layers,
+  double learning_rate, matrix_t** linearComp, matrix_t** activationComp,
   matrix_t** gradLinear, matrix_t** gradActivation, matrix_t** gradWeights) {
 
-  int s, i, b;
-  
+  int s, i;
+
   for (s = 0; s < num_samples; s += BATCH_SIZE) {
-    // #pragma omp parallel 
-    // {
-    //   #pragma omp for schedule(static)
-      for (b = 0; b < BATCH_SIZE; b++) {
+    #pragma omp parallel 
+    {
+      // #pragma omp for schedule(static)
+      int b = omp_get_thread_num();
+      // for (b = 0; b < BATCH_SIZE; b++)
+      if (b < BATCH_SIZE) {
         // forward computation
         for (i = 0; i < num_layers; i++) {
           // linear
@@ -351,14 +353,14 @@ void single_epoch(matrix_t* X, matrix_t* Y, int num_samples,
           }
         }
       }
-    // }// end pragma omp parallel
-    
+    }// end pragma omp parallel
+
     // update all the weights
-    // #pragma omp parallel 
+    // #pragma omp parallel
     // {
       // #pragma omp for schedule(static)
       for (i = 0; i < num_layers; i++) {
-        for (b = 0; b < BATCH_SIZE; b++) {
+        for (size_t b = 0; b < BATCH_SIZE; b++) {
           matrix_t scaMult = multiply(gradWeights[b][i], learning_rate);
           matrix_t diff = subtract(weights[i], scaMult);
           // update the weights vector manually
@@ -368,7 +370,7 @@ void single_epoch(matrix_t* X, matrix_t* Y, int num_samples,
             }
           }
           matrix_free(scaMult);
-          matrix_free(diff);        
+          matrix_free(diff);
         }
       }
     // } // end pragma omp parallel
@@ -384,7 +386,7 @@ void single_epoch(matrix_t* X, matrix_t* Y, int num_samples,
 
 matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
            int input_rows, int input_cols, int output_rows, int output_cols,
-           int* num_units, layer_type_t* layer_types, int num_layers, 
+           int* num_units, layer_type_t* layer_types, int num_layers,
            double learning_rate, int num_epochs)
 {
   // iterators
@@ -449,6 +451,28 @@ matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
 
     printf("epoch = %d avgEntropy = %f\n", e, 0.0);
   }
+
+  for (b = 0; b < BATCH_SIZE; b++) {
+    for (i = 0; i < num_layers; i++) {
+      matrix_free(linearComp[b][i]);
+      matrix_free(activationComp[b][i]);
+      matrix_free(gradLinear[b][i]);
+      matrix_free(gradActivation[b][i]);
+      matrix_free(gradWeights[b][i]);
+    }
+    free(linearComp[b]);
+    free(activationComp[b]);
+    free(gradLinear[b]);
+    free(gradActivation[b]);
+    free(gradWeights[b]);
+  }
+
+  free(linearComp);
+  free(activationComp);
+  free(gradLinear);
+  free(gradActivation);
+  free(gradWeights);
+
 
   return weights;
 
