@@ -103,7 +103,8 @@ void sigmForward(matrix_t dest, matrix_t v) {
 }
 
 void sigmBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
-                             matrix_t gradActivation) {
+                             matrix_t gradActivation) 
+{
   size_t n = gradActivation->n;
   size_t m = gradActivation->m;
   matrix_t res = init(n, m, 0.0);
@@ -252,7 +253,8 @@ void softForward(matrix_t dest, matrix_t v) {
 }
 
 void softBackward(matrix_t dest, matrix_t y, matrix_t linearComp,
-                             matrix_t activationComp, matrix_t gradActivation) {
+                             matrix_t activationComp, matrix_t gradActivation) 
+{
   matrix_t res = subtract(activationComp, y);
 
   if (dest->n != res->n || dest->m != res->m){
@@ -278,107 +280,135 @@ double crossEntropyForward(matrix_t v, matrix_t vh) {
   return crossEntropy;
 }
 
-/* KERNALS HERE */
+void *computeForwardBackward(void *vargp) {
+  info_t info = (info_t)vargp;
+  int i; 
+  int b = info->b; 
+  int s = info->s;
+  matrix_t* X = info->X;
+  matrix_t* Y = info->Y;
+  int num_samples = info->num_samples;
+  matrix_t* weights = info->weights;
+  layer_type_t* layer_types = info->layer_types;
+  int num_layers = info->num_layers;
+  double learning_rate = info->learning_rate;
+  matrix_t** linearComp = info->linearComp;
+  matrix_t** activationComp = info->activationComp;
+  matrix_t** gradLinear = info->gradLinear;
+  matrix_t** gradActivation = info->gradActivation;
+  matrix_t** gradWeights = info->gradWeights;
+
+  // forward computation
+  for (i = 0; i < num_layers; i++) {
+    // linear
+    if (i == 0){
+      linearForward(linearComp[b][i], X[s+b], weights[i]);
+    }else
+      linearForward(linearComp[b][i], activationComp[b][i-1], weights[i]);
+
+    // activation
+    switch (layer_types[i]) {
+      case SIGM:
+      sigmForward(activationComp[b][i], linearComp[b][i]);
+      break;
+    case SOFT:
+      softForward(activationComp[b][i], linearComp[b][i]);
+      break;
+    case TANH:
+      tanhForward(activationComp[b][i], linearComp[b][i]);
+      break;
+    case RELU:
+      reluForward(activationComp[b][i], linearComp[b][i]);
+      break;
+    default:
+      break;
+    }
+  }
+  // backward computation
+  for (i = num_layers - 1; i >= 0; i--) {
+
+    switch (layer_types[i]) {
+    case SIGM:
+      sigmBackward(gradLinear[b][i], linearComp[b][i], activationComp[b][i],
+                                 gradActivation[b][i]);
+      break;
+    case SOFT:
+      softBackward(gradLinear[b][i], Y[s+b], linearComp[b][i],
+                                 activationComp[b][i], gradActivation[b][i]);
+      break;
+    case TANH:
+      tanhBackward(gradLinear[b][i], linearComp[b][i], activationComp[b][i],
+                                 gradActivation[b][i]);
+      break;
+    case RELU:
+      reluBackward(gradLinear[b][i], linearComp[b][i], activationComp[b][i],
+                                 gradActivation[b][i]);
+      break;
+    default:
+      break;
+    }
+
+    if (i == 0) {
+      linearBackward1(gradWeights[b][i], X[s+b], gradLinear[b][i]);
+    } else {
+      linearBackward1(gradWeights[b][i], activationComp[b][i - 1], gradLinear[b][i]);
+      linearBackward2(gradActivation[b][i - 1], weights[i], gradLinear[b][i]);
+    }
+  }
+  pthread_exit(NULL);
+}
 
 void single_epoch(matrix_t* X, matrix_t* Y, int num_samples,
   matrix_t* weights, layer_type_t* layer_types, int num_layers,
   double learning_rate, matrix_t** linearComp, matrix_t** activationComp,
   matrix_t** gradLinear, matrix_t** gradActivation, matrix_t** gradWeights) {
 
-  int s, i;
-
-  for (s = 0; s < num_samples; s += BATCH_SIZE) {
-    #pragma omp parallel 
-    {
-      // #pragma omp for schedule(static)
-      int b = omp_get_thread_num();
-      // for (b = 0; b < BATCH_SIZE; b++)
-      if (b < BATCH_SIZE) {
-        // forward computation
-        for (i = 0; i < num_layers; i++) {
-          // linear
-          if (i == 0)
-            linearForward(linearComp[b][i], X[s+b], weights[i]);
-          else
-            linearForward(linearComp[b][i], activationComp[b][i-1], weights[i]);
-
-
-          // activation
-          switch (layer_types[i]) {
-            case SIGM:
-            sigmForward(activationComp[b][i], linearComp[b][i]);
-            break;
-          case SOFT:
-            softForward(activationComp[b][i], linearComp[b][i]);
-            break;
-          case TANH:
-            tanhForward(activationComp[b][i], linearComp[b][i]);
-            break;
-          case RELU:
-            reluForward(activationComp[b][i], linearComp[b][i]);
-            break;
-          default:
-            break;
-          }
-        }
-        // backward computation
-        for (i = num_layers - 1; i >= 0; i--) {
-
-          switch (layer_types[i]) {
-          case SIGM:
-            sigmBackward(gradLinear[b][i], linearComp[b][i], activationComp[b][i],
-                                       gradActivation[b][i]);
-            break;
-          case SOFT:
-            softBackward(gradLinear[b][i], Y[s+b], linearComp[b][i],
-                                       activationComp[b][i], gradActivation[b][i]);
-            break;
-          case TANH:
-            tanhBackward(gradLinear[b][i], linearComp[b][i], activationComp[b][i],
-                                       gradActivation[b][i]);
-            break;
-          case RELU:
-            reluBackward(gradLinear[b][i], linearComp[b][i], activationComp[b][i],
-                                       gradActivation[b][i]);
-            break;
-          default:
-            break;
-          }
-
-          if (i == 0) {
-            linearBackward1(gradWeights[b][i], X[s+b], gradLinear[b][i]);
-          } else {
-            linearBackward1(gradWeights[b][i], activationComp[b][i - 1], gradLinear[b][i]);
-            linearBackward2(gradActivation[b][i - 1], weights[i], gradLinear[b][i]);
-          }
-        }
-      }
-    }// end pragma omp parallel
-
-    // update all the weights
-    // #pragma omp parallel
-    // {
-      // #pragma omp for schedule(static)
-      for (i = 0; i < num_layers; i++) {
-        for (size_t b = 0; b < BATCH_SIZE; b++) {
-          matrix_t scaMult = multiply(gradWeights[b][i], learning_rate);
-          matrix_t diff = subtract(weights[i], scaMult);
-          // update the weights vector manually
-          for (size_t row = 0; row < diff->n; row++) {
-            for (size_t col = 0; col < diff->m; col++) {
-              weights[i]->data[row][col] = diff->data[row][col];
-            }
-          }
-          matrix_free(scaMult);
-          matrix_free(diff);
-        }
-      }
-    // } // end pragma omp parallel
+  int s, i, b;
+  pthread_t threads[BATCH_SIZE];
+  info_t* infos = (info_t *)calloc(sizeof(info_t), BATCH_SIZE);
+  for (b = 0; b < BATCH_SIZE; b++) {
+    infos[b] = (info_t)calloc(sizeof(struct singleinfo), 1);
+    infos[b]->b = b;
+    infos[b]->X = X;
+    infos[b]->Y = Y;
+    infos[b]->num_samples = num_samples;
+    infos[b]->weights = weights;
+    infos[b]->layer_types = layer_types;
+    infos[b]->num_layers = num_layers;
+    infos[b]->learning_rate = learning_rate;
+    infos[b]->linearComp = linearComp;
+    infos[b]->activationComp = activationComp;
+    infos[b]->gradLinear = gradLinear;
+    infos[b]->gradActivation = gradActivation;
+    infos[b]->gradWeights = gradWeights;
   }
 
-  //weights_ = weights;
-  //return weights_;
+  for (s = 0; s < num_samples; s += BATCH_SIZE) {
+    for (b = 0; b < BATCH_SIZE; b++) {
+      // if ((s+b) >= num_samples) break;
+      infos[b]->s = s;
+      int ret = pthread_create(threads+b, NULL, computeForwardBackward, (void *)infos[b]);
+    }
+    for (b = 0; b < BATCH_SIZE; b++) {
+      pthread_join(threads[b], NULL);
+    }
 
+    // update all the weights
+    for (i = 0; i < num_layers; i++) {
+      for (size_t b = 0; b < BATCH_SIZE; b++) {
+        matrix_t scaMult = multiply(gradWeights[b][i], learning_rate);
+        matrix_t diff = subtract(weights[i], scaMult);
+        // update the weights vector manually
+        for (size_t row = 0; row < diff->n; row++) {
+          for (size_t col = 0; col < diff->m; col++) {
+            weights[i]->data[row][col] = diff->data[row][col];
+          }
+        }
+        matrix_free(scaMult);
+        matrix_free(diff);
+      }
+    }
+  }
 }
 
 
@@ -445,12 +475,64 @@ matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
   }
 
 
+  /* For Cross Entropy */
+  matrix_t* linearCompEntropy = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+  matrix_t* activationCompEntropy = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+  for (i = 0; i < num_layers; i++) {
+    linearCompEntropy[i] = init(num_units[i], 1, 0.0);
+    if (i == 0){
+      activationCompEntropy[i] = init(num_units[i] + 1, 1, 0.0);
+    } else if (i == num_layers - 1) {
+      activationCompEntropy[i] = init(num_units[i], 1, 0.0);
+    } else {
+      activationCompEntropy[i] = init(num_units[i] + 1, 1, 0.0);
+    }
+  }
+
   for (e = 0; e < num_epochs; e++) {
     single_epoch(X, Y, num_samples, weights, layer_types, num_layers, learning_rate,
       linearComp, activationComp, gradLinear, gradActivation, gradWeights);
+/*
+    double totalEntropy = 0.0;
+    for (s = 0; s < num_samples; s++) {
+      for (i = 0; i < num_layers; i++) {
+        // linear
+        if (i == 0){
+          linearForward(linearCompEntropy[i], X[s], weights[i]);
+        }else
+          linearForward(linearCompEntropy[i], activationCompEntropy[i-1], weights[i]);
 
-    printf("epoch = %d avgEntropy = %f\n", e, 0.0);
+        // activation
+        switch (layer_types[i]) {
+          case SIGM:
+          sigmForward(activationCompEntropy[i], linearCompEntropy[i]);
+          break;
+        case SOFT:
+          softForward(activationCompEntropy[i], linearCompEntropy[i]);
+          break;
+        case TANH:
+          tanhForward(activationCompEntropy[i], linearCompEntropy[i]);
+          break;
+        case RELU:
+          reluForward(activationCompEntropy[i], linearCompEntropy[i]);
+          break;
+        default:
+          break;
+        }
+      }
+      totalEntropy += crossEntropyForward(Y[s], activationCompEntropy[num_layers-1]);
+    }
+    printf("epoch = %d avgEntropy = %f\n", e, totalEntropy/num_samples);
+*/
+
   }
+
+  for (i = 0; i < num_layers; i++) {
+    matrix_free(linearCompEntropy[i]);
+    matrix_free(activationCompEntropy[i]);
+  }
+  free(linearCompEntropy);
+  free(activationCompEntropy);
 
   for (b = 0; b < BATCH_SIZE; b++) {
     for (i = 0; i < num_layers; i++) {
@@ -479,44 +561,77 @@ matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
 }
 
 
-size_t predict(matrix_t* weights, matrix_t x,
+size_t predict(matrix_t* weights, matrix_t x, int* num_units,
                int num_layers, layer_type_t* layer_types) {
-  /*
+  
   // forward computation
   int i;
-  matrix_t comp;
-  for (i = 0; i < num_layers; i++) {
-    if (i == 0)
-      comp = linearForward(x, weights[i]);
-    else
-      comp = linearForward(comp, weights[i]);
 
+  matrix_t* linearComp = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+  matrix_t* activationComp = (matrix_t*)calloc(sizeof(matrix_t), num_layers);
+  for (i = 0; i < num_layers; i++) {
+    linearComp[i] = init(num_units[i], 1, 0.0);
+    if (i == 0){
+      activationComp[i] = init(num_units[i] + 1, 1, 0.0);
+    } else if (i == num_layers - 1) {
+      activationComp[i] = init(num_units[i], 1, 0.0);
+    } else {
+      activationComp[i] = init(num_units[i] + 1, 1, 0.0);
+    }
+  }
+
+
+  // forward computation
+  for (i = 0; i < num_layers; i++) {
+    // linear
+    if (i == 0){
+      linearForward(linearComp[i], x, weights[i]);
+    }else
+      linearForward(linearComp[i], activationComp[i-1], weights[i]);
+
+    // activation
     switch (layer_types[i]) {
-    case SIGM:
-      comp = sigmForward(comp);
+      case SIGM:
+      sigmForward(activationComp[i], linearComp[i]);
       break;
     case SOFT:
-      comp = softForward(comp);
+      softForward(activationComp[i], linearComp[i]);
       break;
     case TANH:
-      comp = tanhForward(comp);
+      tanhForward(activationComp[i], linearComp[i]);
       break;
     case RELU:
-      comp = reluForward(comp);
+      reluForward(activationComp[i], linearComp[i]);
       break;
     default:
-      comp = init(1, 1, 0.0);
       break;
     }
   }
+
+
   // now that we have the final computation we can turn it into a one-hot vector
+  matrix_t comp = activationComp[num_layers-1];
   double maxVal = max(comp);
-  for (size_t i = 0; i < comp.size(); i++) {
-    if (comp[i][0] == maxVal) {
+  // display(activationComp[num_layers-1]);
+  // printf("%f\n", maxVal);
+  for (size_t i = 0; i < comp->n; i++) {
+    if (comp->data[i][0] == maxVal) {
+      for (size_t j = 0; j < num_layers; j++) {
+        matrix_free(linearComp[j]);
+        matrix_free(activationComp[j]);
+      }
+      free(linearComp);
+      free(activationComp);
       return i;
     }
   }
-  */
+  
+  for (size_t j = 0; j < num_layers; j++) {
+    matrix_free(linearComp[j]);
+    matrix_free(activationComp[j]);
+  }
+  free(linearComp);
+  free(activationComp);
 
   // should never reach this line
   return 0;

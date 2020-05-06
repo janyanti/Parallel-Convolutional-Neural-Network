@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <omp.h>
+#include <pthread.h>
 
 #include "matrix.h"
 
@@ -28,12 +29,31 @@ enum layer_type_t {
   CONV
 };
 
+struct singleinfo {
+  int b; 
+  int s;
+  matrix_t* X;
+  matrix_t* Y;
+  int num_samples;
+  matrix_t* weights;
+  layer_type_t* layer_types;
+  int num_layers;
+  double learning_rate;
+  matrix_t** linearComp;
+  matrix_t** activationComp;
+  matrix_t** gradLinear;
+  matrix_t** gradActivation;
+  matrix_t** gradWeights;
+};
+
+typedef struct singleinfo * info_t;
+
 
   matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
            int input_rows, int input_cols, int output_rows, int output_cols,
            int* num_units, layer_type_t* layer_types, int num_layers,
            double learning_rate, int num_epochs);
-  size_t predict(matrix_t* weights, matrix_t x,
+  size_t predict(matrix_t* weights, matrix_t x, int* num_units,
                int num_layers, layer_type_t* layer_types);
   void linearForward(matrix_t dest, matrix_t a, matrix_t b);
   void linearBackward1(matrix_t dest, matrix_t a, matrix_t b);

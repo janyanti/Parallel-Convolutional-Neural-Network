@@ -1,7 +1,7 @@
 EXECUTABLE := cnn-omp
 CU_FILES   :=
 CU_DEPS    :=
-CC_FILES   := dcnn.cpp main.cpp matrix.cpp  parse_file.cpp
+CC_FILES   := dcnn.cpp main.cpp matrix.cpp  parse_file.cpp instrument.cpp
 LOGS	   := logs
 
 all: $(EXECUTABLE)
@@ -16,7 +16,7 @@ LDLIBS  := $(addprefix -l, $(LIBS))
 LDFRAMEWORKS := $(addprefix -framework , $(FRAMEWORKS))
 
 
-OBJS=$(OBJDIR)/main.o $(OBJDIR)/matrix.o $(OBJDIR)/dcnn.o $(OBJDIR)/parse_file.o
+OBJS=$(OBJDIR)/main.o $(OBJDIR)/matrix.o $(OBJDIR)/dcnn.o $(OBJDIR)/parse_file.o $(OBJDIR)/instrument.o
 
 .PHONY: dirs clean
 

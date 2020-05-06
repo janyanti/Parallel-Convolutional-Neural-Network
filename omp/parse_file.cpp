@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 
-#define NUM_IMAGES 1
+#define NUM_IMAGES 4096
 
 namespace pfile {
 
@@ -44,9 +44,9 @@ matrix::matrix_t read_images(char *filepath) {
     n_cols = reverse_int(n_cols);
     data_image = n_rows * n_cols;
 
-    matrix_t arr = init(NUM_IMAGES, data_image, 0.0);
+    matrix_t arr = init(num_images, data_image, 0.0);
 
-    for (int i = 0; i < NUM_IMAGES; ++i) {
+    for (int i = 0; i < num_images; ++i) {
       for (int r = 0; r < n_rows; ++r) {
         for (int c = 0; c < n_cols; ++c) {
           unsigned char temp = 0;
@@ -74,9 +74,9 @@ matrix::matrix_t read_labels(char *filepath, int num_labels) {
     num_images = reverse_int(num_images);
 
 
-    matrix_t arr = init(NUM_IMAGES, num_labels, 0.0);
+    matrix_t arr = init(num_images, num_labels, 0.0);
 
-    for (int i = 0; i < NUM_IMAGES; ++i) {
+    for (int i = 0; i < num_images; ++i) {
       unsigned char j = 0;
       file.read((char *)&j, sizeof(j));
       arr->data[i][j] = 1.0;
