@@ -11,21 +11,22 @@
 #include <fstream>
 #include <iostream>
 
-#define NUM_IMAGES 10000
+#define NUM_IMAGES 8192
 
 namespace pfile {
 
 int reverse_int(int i) {
   unsigned char ch1, ch2, ch3, ch4;
-  ch1 = i & 255;
-  ch2 = (i >> 8) & 255;
-  ch3 = (i >> 16) & 255;
-  ch4 = (i >> 24) & 255;
+  ch1 = i & 0xFF;
+  ch2 = (i >> 8) & 0xFF;
+  ch3 = (i >> 16) & 0xFF;
+  ch4 = (i >> 24) & 0xFF;
   return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
-void read_images(char *filepath, matrix::host_matrix_t &arr) {
+matrix::matrix_t read_images(char *filepath) {
   std::ifstream file(filepath, std::ios::binary);
+
   if (file.is_open()) {
     int magic_number = 0;
     int num_images = 0;
@@ -42,21 +43,27 @@ void read_images(char *filepath, matrix::host_matrix_t &arr) {
     file.read((char *)&n_cols, sizeof(n_cols));
     n_cols = reverse_int(n_cols);
     data_image = n_rows * n_cols;
-    arr.resize(NUM_IMAGES, matrix::host_vec_t(data_image));
 
-    for (int i = 0; i < NUM_IMAGES; ++i) {
+    matrix_t arr = init(num_images, data_image, 0.0);
+
+    for (int i = 0; i < num_images; ++i) {
       for (int r = 0; r < n_rows; ++r) {
         for (int c = 0; c < n_cols; ++c) {
           unsigned char temp = 0;
           file.read((char *)&temp, sizeof(temp));
-          arr[i][(n_rows * r) + c] = (double)temp;
+          size_t idx = (i * n_rows + r) * n_cols + c;
+          arr->data[idx] = (double)temp / 255.0;
         }
       }
     }
+    return arr;
   }
+
+  /* Error opening file */
+  return NULL;
 }
 
-void read_labels(char *filepath, int num_labels, matrix::host_matrix_t &arr) {
+matrix::matrix_t read_labels(char *filepath, int num_labels) {
 
   std::ifstream file(filepath, std::ios::binary);
   if (file.is_open()) {
@@ -66,47 +73,58 @@ void read_labels(char *filepath, int num_labels, matrix::host_matrix_t &arr) {
     magic_number = reverse_int(magic_number);
     file.read((char *)&num_images, sizeof(num_images));
     num_images = reverse_int(num_images);
-    arr.resize(NUM_IMAGES, matrix::host_vec_t(num_labels));
 
-    for (int i = 0; i < NUM_IMAGES; ++i) {
+
+    matrix_t arr = init(num_images, num_labels, 0.0);
+
+    for (int i = 0; i < num_images; i++) {
       unsigned char j = 0;
       file.read((char *)&j, sizeof(j));
-      arr[i][j] = 1.0;
+      size_t idx = i * num_labels + j;
+      arr->data[idx] = 1.0;
     }
+
+    return arr;
   }
+
+  /* Error opening file */
+  return NULL;
+
 }
 
-thrust::host_vector<dcnn::sample_t> create_sample(matrix::host_matrix_t data, matrix::host_matrix_t labels) {
-  size_t n = data.size();
-  size_t m = labels.size();
+void create_sample(matrix::matrix_t data, matrix::matrix_t labels,
+                   matrix::matrix_t *X, matrix::matrix_t *Y) {
 
-  size_t num_data = data[0].size();
-  size_t num_labels = labels[0].size();
+  size_t n = data->n;
+  size_t m = labels->n;
 
-  thrust::host_vector<dcnn::sample_t> samples;
+  size_t num_data = data->m;
+  size_t num_labels = labels->m;
 
   if (n != m) {
     printf("Data for training and labels don't match \n");
   }
 
   for (size_t i = 0; i < n; i++) {
-    matrix::host_vec_t ones = init(1, 1.);
-    matrix::host_matrix_t data_matrix =
-        matrix::vector_to_matrix(data[i], num_data, 1);
-    data_matrix.insert(data_matrix.begin(), ones);
-    matrix::host_matrix_t label_matrix =
-        matrix::vector_to_matrix(labels[i], num_labels, 1);
+    size_t j;
+    matrix::matrix_t data_matrix = init(num_data + 1, 1, 1.0);
+    matrix::matrix_t label_matrix = init(num_labels, 1, 1.0);
 
-    dcnn::sample_t sample;
-    sample.push_back(data_matrix);
-    sample.push_back(label_matrix);
-    
-    samples.push_back(sample);
+    for (j = 0; j < num_data; j++) {
+      size_t idxD = i * num_data + j;
+      data_matrix->data[j+1] = data->data[idxD];
+    }
+
+
+    for (j = 0; j < num_labels; j++) {
+      size_t idx = i * num_labels + j;
+      label_matrix->data[j] = labels->data[idx];
+    }
+
+    X[i] = data_matrix;
+    Y[i] = label_matrix;
   }
 
-  return samples;
 }
 
 }; // namespace pfile
-
-

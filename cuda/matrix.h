@@ -6,103 +6,93 @@
   Simple Linear Algerbra Libraray for Machine
   TODO: Description of library functions
 */
-#include <algorithm>
+#pragma once
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-#include "math.h"
+#include <string.h>
+
 
 namespace matrix {
-/* Host Vector and Matrix Type declarations */
-typedef thrust::host_vector<double> host_vec_t;
-typedef thrust::host_vector<host_vec_t> host_matrix_t;
 
-/* Host Vector functions */
-double sum(host_vec_t a);
-double mean(host_vec_t a);
-double max(host_vec_t a);
-double min(host_vec_t a);
-host_vec_t log(host_vec_t a);
-host_vec_t exp(host_vec_t a);
-host_vec_t tanh(host_vec_t a);
-host_vec_t pow(host_vec_t a, int exp);
-host_vec_t multiply(host_vec_t a, double scalar);
-host_vec_t divide(host_vec_t a, double scalar);
-double dot(host_vec_t a, host_vec_t b);
-host_vec_t add(host_vec_t a, host_vec_t b);
-host_vec_t subtract(host_vec_t a, host_vec_t b);
-host_vec_t init(size_t n, double value);
-host_vec_t randu(size_t n);
-void display(host_vec_t a);
+/* Structure definitions for matrices */
+typedef struct vec{
+  size_t n;
+  double *data;
+} vec;
 
-/* Host Matrix functions */
-double sum(host_matrix_t A);
-double mean(host_matrix_t A);
-double max(host_matrix_t A);
-double min(host_matrix_t A);
-host_matrix_t log(host_matrix_t A);
-host_matrix_t exp(host_matrix_t A);
-host_matrix_t tanh(host_matrix_t A);
-host_matrix_t pow(host_matrix_t A, int exp);
-host_matrix_t transpose(host_matrix_t A);
-host_matrix_t multiply(host_matrix_t A, double scalar);
-host_matrix_t divide(host_matrix_t A, double scalar);
-host_matrix_t dot(host_matrix_t A, host_matrix_t B);
-host_matrix_t add(host_matrix_t A, host_matrix_t B);
-host_matrix_t subtract(host_matrix_t A, host_matrix_t B);
-host_matrix_t slice(host_matrix_t A, size_t n, size_t m);
-host_matrix_t vector_to_matrix(host_vec_t a, size_t n, size_t m);
-host_matrix_t init(size_t n, size_t m, double value);
-host_matrix_t randu(size_t n, size_t m);
-void display(host_matrix_t A);
+typedef struct {
+  size_t n;
+  size_t m;
+  double *data;
+} matrix;
 
-/* Device Vector and Matrix Type declarations */
-typedef thrust::device_vector<double> device_vec_t;
-typedef thrust::device_vector<device_vec_t> device_matrix_t;
+typedef struct {
+  size_t n;
+  size_t m;
+  double *_data;
+} dev_matrix;
 
-/* device Vector functions */
-__global__ void sum(size_t n, double* a, double* result);   // called by the host with dims <1,1>
-// __global__ void mean(device_vec_t a, double* result);    // called by the host with dims <1,1>
-__global__ void max(size_t n, double* a, double* result);   // called by the host with dims <1,1>
-__global__ void min(size_t n, double* a, double* result);   // called by the host with dims <1,1>
-__global__ void log(size_t n, double* a, double* b);
-__global__ void exp(size_t n, double* a, double* b);
-__global__ void tanh(size_t n, double* a, double* b);
-__global__ void pow(size_t n, double* a, int exp, double* b);
-__global__ void multiply(size_t n, double* a, double scalar, double* b);
-__global__ void divide(size_t n, double* a, double scalar, double* b);
-__global__ void dot(size_t n, double* a, double* b, double* result);   // called by the host with dims <1,1>
-__global__ void add(size_t n, double* a, double* b, double* c);
-__global__ void subtract(size_t n, double* a, double* b, double* c);
-device_vec_t device_init(size_t n, double value);
-device_vec_t device_randu(size_t n);
+typedef struct {
+  size_t n;
+  size_t m;
+  size_t d;
+  double *data;
+} tensor;
 
-device_matrix_t slice(device_matrix_t A, size_t n, size_t m);
-__global__ void dot(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double* A, double* B, double* C);
-__global__ void transpose(size_t n, size_t m, double* A, double* B);
-// inline __device__ void display(device_vec_t a);
 
-/* device Matrix functions */
-// __global__ void sum(size_t n, size_t m, double** A, double* result);   // called by the host with dims <1,1>
-// __global__ void mean(device_matrix_t A, double* result);  // called by the host with dims <1,1>
-// __global__ void max(size_t n, size_t m, double** A, double* result);   // called by the host with dims <1,1>
-// __global__ void min(size_t n, size_t m, double** A, double* result);   // called by the host with dims <1,1>
-// __global__ void log(size_t n, size_t m, double** A, double** B);
-// __global__ void exp(size_t n, size_t m, double** A, double** B);
-// __global__ void tanh(size_t n, size_t m, double** A, double** B);
-// __global__ void pow(size_t n, size_t m, double** A, int exp, double** B);
-// __global__ void multiply(size_t n, size_t m, double** A, double scalar, double** B);
-// __global__ void divide(size_t n, size_t m, double** A, double scalar, double** B);
-// __global__ void dot(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double** A, double** B, double** C);
-// __global__ void add(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double** A, double** B, double** C);
-// __global__ void subtract(size_t n_A, size_t m_A, size_t n_B, size_t m_B, double** A, double** B, double** C);
-// 
-// __host__ device_matrix_t vector_to_matrix(device_vec_t a, size_t n, size_t m);
-// __host__ device_matrix_t device_init(size_t n, size_t m, double value);
-// __host__ device_matrix_t device_randu(size_t n, size_t m);
-// inline __device__ void display(device_matrix_t A);
+/* Vector and Matrix Type declarations */
+typedef vec *vec_t;
+typedef matrix *matrix_t;
+typedef dev_matrix *dev_matrix_t;
+typedef tensor *tensor_t;
+
+
+/* Vector functions */
+double sum(vec_t a);
+double mean(vec_t a);
+double max(vec_t a);
+double min(vec_t a);
+vec_t log(vec_t a);
+vec_t exp(vec_t a);
+vec_t tanh(vec_t a);
+vec_t pow(vec_t a, int exp);
+vec_t multiply(vec_t a, double scalar);
+vec_t divide(vec_t a, double scalar);
+double dot(vec_t a, vec_t b);
+vec_t add(vec_t a, vec_t b);
+vec_t subtract(vec_t a, vec_t b);
+vec_t init(size_t n, double value);
+vec_t randu(size_t n);
+void display(vec_t a);
+void clear(vec_t a);
+void vec_free(vec_t a);
+
+/* Matrix functions */
+double sum(matrix_t A);
+double mean(matrix_t A);
+double max(matrix_t A);
+double min(matrix_t A);
+matrix_t log(matrix_t A);
+matrix_t exp(matrix_t A);
+matrix_t tanh(matrix_t A);
+matrix_t pow(matrix_t A, int exp);
+matrix_t transpose(matrix_t A);
+matrix_t multiply(matrix_t A, double scalar);
+matrix_t divide(matrix_t A, double scalar);
+matrix_t dot(matrix_t A, matrix_t B);
+matrix_t add(matrix_t A, matrix_t B);
+matrix_t subtract(matrix_t A, matrix_t B);
+matrix_t slice(matrix_t A, size_t n, size_t m);
+matrix_t vector_to_matrix(vec_t a, size_t n, size_t m);
+matrix_t init(size_t n, size_t m, double value);
+matrix_t randu(size_t n, size_t m);
+void display(matrix_t A);
+void clear(matrix_t A);
+void matrix_free(matrix_t A);
+
+/* Device Matrix functions */
+dev_matrix_t cuda_init(size_t n, size_t m, double value);
 
 } // namespace matrix

@@ -1,4 +1,6 @@
 /objs
 /logs
 /data
+/cuda/objs
+/mpi/cnn-*
 cnn

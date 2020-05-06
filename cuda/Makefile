@@ -1,9 +1,9 @@
 EXECUTABLE := cnn
-LDFLAGS=-L/usr/local/depot/cuda-10.2/lib64/ -lcudart
-CU_FILES   := cudaRenderer.cu
+LDFLAGS=-L/usr/local/cuda-10.2/lib64/ -lcudart
+CU_FILES   := dcnn.cu matrix.cu
 CU_DEPS    :=
-CC_FILES   := dcnn.cu main.cu matrix.cu  parse_file.cu
-LOGS	   	 := logs
+CC_FILES   := main.cpp parse_file.cpp
+LOGS	   := logs
 
 all: $(EXECUTABLE)
 
@@ -11,7 +11,8 @@ all: $(EXECUTABLE)
 
 OBJDIR=objs
 CXX=g++ -m64
-CXXFLAGS=-O3 -g -std=c++1y
+CXXFLAGS=-Og -g -std=c++1y
+#LIBS += GL glut cudart
 
 LDLIBS  := $(addprefix -l, $(LIBS))
 LDFRAMEWORKS := $(addprefix -framework , $(FRAMEWORKS))

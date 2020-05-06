@@ -9,18 +9,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-#include <thrust/copy.h>
 
 #include "matrix.h"
+
+#define TPB 256
+
+#define BATCH_SIZE 8
 
 using namespace matrix;
 
 namespace dcnn {
-
-typedef thrust::host_vector<host_matrix_t> sample_t;
-typedef thrust::device_vector<device_matrix_t> device_sample_t;
 
 enum layer_type_t {
   SIGM,
@@ -30,30 +28,28 @@ enum layer_type_t {
   CONV
 };
 
-void train(thrust::host_vector<sample_t> samples, int num_samples, 
+  matrix_t* train(matrix_t* X, matrix_t* Y, int num_samples,
            int input_rows, int input_cols, int output_rows, int output_cols,
-           thrust::device_vector<int> num_units, 
-           thrust::device_vector<layer_type_t> layer_types,
-           int num_layers, double learning_rate, int num_epochs, 
-           thrust::host_vector<host_matrix_t> weights);
-size_t predict(thrust::host_vector<host_matrix_t> weights, host_matrix_t x, 
-               int num_layers, thrust::host_vector<layer_type_t> layer_types);
-host_matrix_t linearForward(host_matrix_t a, host_matrix_t b);
-host_matrix_t linearBackward1(host_matrix_t a, host_matrix_t b);
-host_matrix_t linearBackward2(host_matrix_t a, host_matrix_t b);
-host_matrix_t sigmForward(host_matrix_t v);
-host_matrix_t sigmBackward(host_matrix_t linearComp, host_matrix_t activationComp,
-                      host_matrix_t gradActivation);
-host_matrix_t softForward(host_matrix_t v);
-host_matrix_t softBackward(host_matrix_t y, host_matrix_t linearComp,
-                      host_matrix_t activationComp, host_matrix_t gradActivation);
-double crossEntropyForward(host_matrix_t v, host_matrix_t vh);
-host_matrix_t tanhForward(host_matrix_t v);
-host_matrix_t tanhBackward(host_matrix_t linearComp, host_matrix_t activationComp,
-                      host_matrix_t gradActivation);
-host_matrix_t reluForward(host_matrix_t v);
-host_matrix_t reluBackward(host_matrix_t linearComp, host_matrix_t activationComp,
-                      host_matrix_t gradActivation);
+           int* num_units, layer_type_t* layer_types, int num_layers,
+           double learning_rate, int num_epochs);
+  size_t predict(matrix_t* weights, matrix_t x, int* num_units,
+               int num_layers, layer_type_t* layer_types);
+  void linearForward(matrix_t dest, matrix_t a, matrix_t b);
+  void linearBackward1(matrix_t dest, matrix_t a, matrix_t b);
+  void linearBackward2(matrix_t dest, matrix_t a, matrix_t b);
+  void sigmForward(matrix_t dest, matrix_t v);
+  void sigmBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
+  void softForward(matrix_t dest, matrix_t v);
+  void softBackward(matrix_t dest, matrix_t y, matrix_t linearComp,
+                        matrix_t activationComp, matrix_t gradActivation);
+  double crossEntropyForward(matrix_t v, matrix_t vh);
+  void tanhForward(matrix_t dest, matrix_t v);
+  void tanhBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
+  void reluForward(matrix_t dest, matrix_t v);
+  void reluBackward(matrix_t dest, matrix_t linearComp, matrix_t activationComp,
+                        matrix_t gradActivation);
 // double crossEntropyBackward();
 
 
